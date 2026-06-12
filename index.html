@@ -753,6 +753,32 @@ html[dir="rtl"] .nav-item.active::before {
 </div>
 
 <script>
+// ====== LOCAL AI RESPONSES (Demo mode — no API key needed) ======
+const AI_ANSWERS = {
+  fr: [
+    {q:"taux is",a:"Le taux normal de l'IS est fixé à 25% pour les exercices ouverts depuis 2022. Le taux réduit de 15% s'applique sur la fraction du bénéfice ≤ 42 622 € (PME éligibles). Pour les TPE, le taux peut être ramené à 10% sous conditions (art. 219 CGI)."},
+    {q:"tva",a:"Le régime réel normal de TVA s'applique aux entreprises avec CA > 840 000 € (ventes) ou > 254 000 € (prestations). Déclaration mensuelle CA3. Taux normal : 20%, intermédiaire : 10%, réduit : 5,5%."},
+    {q:"optimisation",a:"Pour optimiser l'IS 2024 : 1. Provisionner les risques avant le 31/12, 2. Maximiser les amortissements dégressifs, 3. Intégrer le crédit d'impôt recherche (CIR), 4. Utiliser le régime des sociétés mères (plus-values nettes)."},
+    {q:"amort",a:"Dégressif : 1,25× linéaire pour +6 ans, 1,75× pour +4 ans, 2,25× pour +3 ans. Linéaire recommandé pour les biens de faible valeur."},
+    {q:"cvae",a:"CVAE calculée sur la valeur ajoutée produite (VA ≤ 7 630 000 €). Taux variable de 0% à 1,5%. Déclaration 1329-DEF au 2 mai 2025."},
+    {q:"fec",a:"FEC (Fichier des Écritures Comptables) obligatoire en cas de contrôle DGFiP. Norme 2013 : 15 colonnes, format CSV/UTF-8. Délai de transmission : 15 jours ouvrés."},
+    {q:"bofip",a:"BOFIP-BIC : les provisions pour risques doivent être justifiées par un litige ou un risque avéré. Le simple risque de change ou de taux n'est pas provisionnable."},
+    {q:"default",a:"Bonjour Marie. J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2025-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?"}
+  ],
+  en: [{q:"taux is",a:"The standard CIT rate is 25% for fiscal years starting in 2022. Reduced rate of 15% applies on profit ≤ €42,622 for eligible SMEs."},{q:"tva",a:"Standard VAT regime for companies with revenue > €840K (goods) or > €254K (services). Monthly CA3 return. Standard rate: 20%."},{q:"default",a:"Hello Marie. I detected 2 anomalies in January entries: a €12.50 VAT discrepancy and a misallocated account 622700."}],
+  es: [{q:"taux is",a:"El tipo general del IS es del 25% para ejercicios desde 2022. Tipo reducido del 15% para beneficios ≤ 42.622 € (PYME)."},{q:"default",a:"Buenos días, Marie. He detectado 2 anomalías en los asientos de enero."}],
+  ar: [{q:"taux is",a:"معدل ضريبة الشركات القياسي هو 25% للسنة المالية 2022 فما بعد. المعدل المخفض 15%"},{q:"default",a:"مرحباً ماري. اكتشفت شذوذَين في قيود يناير."}]
+};
+
+function findAIAnswer(q, lang) {
+  const answers = AI_ANSWERS[lang] || AI_ANSWERS.fr;
+  const ql = q.toLowerCase();
+  for (const a of answers) {
+    if (ql.includes(a.q)) return a.a;
+  }
+  return answers.find(a => a.q === "default").a;
+}
+
 const i18n = {
   fr: {
     "nav.section.core":"Principal","nav.section.fiscal":"Fiscal & Conformité","nav.section.config":"Configuration","nav.dashboard":"Tableau de bord","nav.saisie":"Saisie & Automatisation","nav.clotures":"Clôtures Annuelles","nav.etats":"États Financiers","nav.fiscalite":"Module Fiscalité","nav.ged":"Portail GED Clients","nav.veille":"Veille Juridique & IA","nav.clients":"Dossiers Clients","nav.parametres":"Paramètres","user.role":"Expert-Comptable","dashboard.title":"Tableau de bord","dashboard.subtitle":"Vue d'ensemble — Exercice 2024","notif.title":"Notifications","notif.markAll":"Tout marquer lu","notif.tva":"Déclaration TVA","notif.tvaDesc":"Échéance dans 3 jours","notif.lettrage":"Lettrage automatique","notif.lettrageDesc":"847 écritures lettrées","notif.client":"Client Dupont SA","notif.clientDesc":"5 nouvelles pièces déposées","ticker.label":"KPI LIVE","ticker.ca":"CA Cumulé","ticker.tva":"TVA Collectée","ticker.clients":"Clients Actifs","ticker.ecritures":"Écritures/Mois","ticker.is":"Provision IS","ticker.amort":"Amortissements","kpi.ca":"Chiffre d'Affaires","kpi.ca.sub":"Exercice 2024 cumulé","kpi.resultat":"Résultat Net","kpi.resultat.sub":"Après IS estimé","kpi.tva.label":"TVA à déclarer","kpi.tva":"Déclaration CA3","kpi.tva.amount":"Montant : 569 500 €","kpi.lettrage":"Lettrage Automatique","kpi.lettrage.sub":"Écritures lettrées ce mois","table.journals.title":"Dernières Écritures Comptables","table.date":"Date ↕","table.piece":"N° Pièce ↕","table.libelle":"Libellé","table.compte":"Compte","table.debit":"Débit (€)","table.credit":"Crédit (€)","table.statut":"Statut","status.validated":"Lettré","status.pending":"Non lettré","status.overdue":"En retard","status.processing":"En cours","action.viewAll":"Voir tout →","action.calendar":"Calendrier →","action.openModule":"Ouvrir →","action.detail":"Détail →","alerts.title":"Alertes & Échéances","alert.tva.title":"Déclaration CA3 — TVA mensuelle","alert.tva.desc":"Montant à déclarer : 569 500 € — Compte 44571","alert.is.title":"Acompte IS — 4ème échéance","alert.is.desc":"Provision estimée : 35 593 €","alert.bilan.title":"Clôture bilan — Dossier Martin SARL","alert.bilan.desc":"Inventaire physique non confirmé","alert.liasse.title":"Liasse fiscale — Dossier Petit & Fils","alert.liasse.desc":"Télétransmission DGFiP en attente de validation","alert.ocr.title":"OCR — 12 factures en attente","alert.ocr.desc":"Reconnaissance automatique disponible","alert.cvae.title":"Déclaration CVAE 2024","alert.cvae.desc":"Formulaire 1329-DEF à déposer","checklist.title":"Travaux d'Inventaire","checklist.progress":"Avancement clôture 2024","check.rapprochement":"Rapprochement bancaire","check.lettrage":"Lettrage comptes tiers","check.amort":"Calcul amortissements","check.provisions":"Dotations aux provisions","check.stock":"Valorisation des stocks","check.bilan":"Édition du bilan","cashflow.title":"Flux de Trésorerie","cashflow.encaissements":"Encaissements","cashflow.decaissements":"Décaissements","ai.title":"Assistant IA Fiscal","ai.status":"Actif — claude-sonnet","ai.greeting":"Bonjour Marie.","ai.greeting.msg":"J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2025-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?","ai.placeholder":"Posez une question de doctrine fiscale…","ai.sug1":"Taux IS applicable ?","ai.sug2":"Régime TVA réel normal","ai.sug3":"Optimisation IS 2024"
@@ -803,39 +829,156 @@ function toggleNotifs(){notifsOpen=!notifsOpen;document.getElementById('notif-dr
 document.addEventListener('click',e=>{if(notifsOpen&&!e.target.closest('.icon-btn')&&!e.target.closest('#notif-dropdown')){notifsOpen=!1;document.getElementById('notif-dropdown').classList.remove('open')}});
 function navigate(s,e){e.preventDefault();document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));e.currentTarget.classList.add('active')}
 
-async function askAI(){
+function askAI() {
   const input=document.getElementById('ai-input');
   const q=input.value.trim();
   if(!q)return;
   const resp=document.getElementById('ai-response');
   input.value='';
   resp.innerHTML='<span style="color:var(--text-muted);font-style:italic">⟳ Analyse en cours…</span>';
-  try{
-    const res=await fetch("https://api.anthropic.com/v1/messages",{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-6",
-        max_tokens:1000,
-        messages:[{role:"user",content:q}]
-      })
-    });
-    const data=await res.json();
-    const text=data.content?.map(b=>b.text||'').join('')||'Réponse indisponible.';
-    resp.innerHTML=text.replace(/\n/g,'<br>')
-  }catch(e){resp.innerHTML='<span style="color:var(--red)">Erreur de connexion à l\'API.</span>'}
+  setTimeout(() => {
+    const answer = findAIAnswer(q, currentLang);
+    resp.innerHTML = answer.replace(/\n/g,'<br>');
+  }, 800);
 }
 
 function fillAI(el){document.getElementById('ai-input').value=el.textContent;document.getElementById('ai-input').focus()}
 document.getElementById('ai-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')askAI()});
 
-function animateKPI(){
-  const el=document.getElementById('kpi-ca');
-  if(!el)return;
-  let v=2847500;
-  setInterval(()=>{v+=Math.floor((Math.random()-0.3)*500);el.textContent=v.toLocaleString('fr-FR')},4000)
+// ====== TABLE SORT ======
+let sortDir = {};
+function sortTable(col) {
+  const tbody = document.querySelector('.data-table tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const dir = (sortDir[col] = !(sortDir[col] || false));
+  rows.sort((a, b) => {
+    const va = a.cells[col].textContent.trim();
+    const vb = b.cells[col].textContent.trim();
+    const na = parseFloat(va.replace(/[^0-9,\-]/g,'').replace(',','.'));
+    const nb = parseFloat(vb.replace(/[^0-9,\-]/g,'').replace(',','.'));
+    if (!isNaN(na) && !isNaN(nb)) return dir ? na - nb : nb - na;
+    return dir ? va.localeCompare(vb, currentLang) : vb.localeCompare(va, currentLang);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+document.querySelectorAll('.data-table th').forEach((th, i) => {
+  th.style.cursor = 'pointer';
+  th.addEventListener('click', () => sortTable(i));
+});
+
+// ====== CHECKLIST TOGGLE ======
+document.querySelectorAll('.check-item').forEach(item => {
+  item.addEventListener('click', () => {
+    item.classList.toggle('done');
+    const done = document.querySelectorAll('.check-item.done').length;
+    const total = document.querySelectorAll('.check-item').length;
+    const pct = Math.round(done/total*100);
+    document.querySelector('.progress-bar-fill').style.width = pct + '%';
+    document.querySelector('.progress-label .text-mono').textContent = pct + '%';
+  });
+});
+
+// ====== KPI CLICK ======
+document.querySelectorAll('.kpi-card').forEach((card, i) => {
+  card.addEventListener('click', () => {
+    const titles = ['Chiffre d\'Affaires','Résultat Net','TVA à déclarer','Lettrage'];
+    const details = [
+      'CA 2024 cumulé : 2 847 500 € (+8.4% vs N-1)',
+      'Résultat net après IS : 418 340 € (marge 14.7%)',
+      'TVA CA3 due au 15/01/2025 : 569 500 €',
+      'Taux de lettrage : 847/930 écritures (91.1%)'
+    ];
+    const msgs = {
+      fr:['Chiffre d\'Affaires','Résultat Net','TVA à déclarer','Lettrage'],
+      en:['Revenue','Net Income','VAT to file','Reconciliation'],
+      es:['Facturación','Resultado Neto','IVA a declarar','Conciliación'],
+      ar:['رقم الأعمال','صافي الربح','ضريبة القيمة المضافة','المطابقة']
+    };
+    const t = msgs[currentLang] || msgs.fr;
+    alert(`📊 ${t[i]}\n${details[i]}`);
+  });
+});
+
+// ====== NOTIFICATION BADGE COUNT ======
+let notifCount = 3;
+function updateNotifBadge() {
+  const dot = document.querySelector('.notif-dot');
+  if (notifCount > 0) {
+    dot.style.display = 'block';
+    dot.textContent = '';
+  } else {
+    dot.style.display = 'none';
+  }
+}
+document.querySelector('.notif-mark-all')?.addEventListener('click', () => {
+  notifCount = 0;
+  document.querySelectorAll('.notif-item.unread').forEach(i => i.classList.remove('unread'));
+  updateNotifBadge();
+});
+
+// ====== DEMO BADGE ======
+const demoBadge = document.createElement('div');
+demoBadge.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:9999;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:var(--font-data);letter-spacing:0.5px;cursor:pointer;opacity:0.85';
+demoBadge.textContent = '⚡ MODE DÉMO';
+demoBadge.setAttribute('data-tip', 'Données simulées — cliquez partout pour tester');
+document.body.appendChild(demoBadge);
+
+// ====== NAVIGATION (shows different sections) ======
+const views = {
+  dashboard: document.querySelector('.main-content'),
+  saisie: null,
+  clotures: null,
+  etats: null,
+  fiscalite: null,
+  ged: null,
+  veille: null,
+};
+
+const SECTION_HTML = {
+  saisie: `<div class="card"><div class="card-header"><div class="card-title">📄 Saisie & OCR</div></div><div style="padding:40px 20px;text-align:center"><div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:60px 20px;background:var(--bg-input);cursor:pointer"><svg width="40" height="40" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.2"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg><p style="margin-top:16px;color:var(--text-secondary);font-size:13px">Déposez vos factures ici (PDF, JPG, PNG)<br><span style="color:var(--text-muted);font-size:11px">Simulation OCR — 12 factures en attente</span></p></div></div></div>`,
+  clotures: `<div class="card"><div class="card-header"><div class="card-title">🔒 Clôture Annuelle 2024</div><span class="card-badge">62%</span></div><div style="padding:20px"><div class="checklist">${['Rapprochement bancaire ✓','Lettrage comptes ✓','Amortissements ✓','Provisions ⬜','Stocks ⬜','Bilan ⬜'].map((s,i)=>`<div class="check-item ${i<3?'done':''}" style="cursor:pointer"><div class="check-box">${i<3?'✓':''}</div><span class="check-label">${s.replace(/[✓⬜]/g,'').trim()}</span></div>`).join('')}</div><button style="margin-top:12px;padding:8px 16px;background:var(--accent);color:white;border:none;border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-ui);font-weight:600;font-size:12px" onclick="alert('📄 Export FEC en cours… (simulation)')">📥 Exporter FEC</button></div></div>`,
+  etats: `<div class="card"><div class="card-header"><div class="card-title">📊 États Financiers</div></div><div style="padding:20px"><div style="display:grid;gap:10px">${['Bilan Actif/Passif','Compte de Résultat','Annexe','Liasse Fiscale 2024'].map(s=>`<div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer;font-size:13px;color:var(--text-secondary);display:flex;justify-content:space-between" onclick="alert('📄 ${s} — Export PDF/Excel (simulation)')"><span>${s}</span><span style="color:var(--accent)">→</span></div>`).join('')}</div></div></div>`,
+  fiscalite: `<div class="card"><div class="card-header"><div class="card-title">💰 Module Fiscalité</div></div><div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px">${[['IS',25],['TVA',20],['CVAE',1.5],['CFE','Variable']].map(([n,v])=>`<div style="background:var(--bg-input);border-radius:var(--radius-md);padding:16px;text-align:center"><div style="font-size:24px;font-weight:700;color:var(--accent);font-family:var(--font-data)">${typeof v==='number'?v+'%':v}</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px">Taux ${n}</div></div>`).join('')}</div></div>`,
+  ged: `<div class="card"><div class="card-header"><div class="card-title">📁 Portail Clients</div></div><div style="padding:20px"><div style="display:grid;gap:8px">${[['SARL Dupont','5 docs','green'],['Martin SARL','2 docs','amber'],['Petit & Fils','12 docs','blue'],['Dupuis SAS','0 doc','red']].map(([n,d,c])=>`<div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="alert('📂 ${n} — ${d} (simulation)')"><span style="color:var(--text-secondary);font-size:13px">${n}</span><span style="color:var(--${c})">${d}</span></div>`).join('')}</div></div></div>`,
+  veille: `<div class="card"><div class="card-header"><div class="card-title">📰 Veille Juridique</div></div><div style="padding:20px">${['BOI-IS-DEC-20 : Taux IS 2025 confirmé','BOI-TVA-DEC-30 : Franchise en base relevée','C. com. art. L123-12 : Délai FEC allongé'].map(s=>`<div style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">📌 ${s}</div>`).join('')}</div></div>`,
+};
+
+function navigate(section, e) {
+  e.preventDefault();
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  e.currentTarget.classList.add('active');
+  const main = document.querySelector('.main-content');
+  if (section === 'dashboard') {
+    // Restore original content — simple reload
+    location.reload();
+    return;
+  }
+  const html = SECTION_HTML[section];
+  if (html) {
+    main.innerHTML = html;
+    // Re-bind checklist clicks for clotures section
+    if (section === 'clotures') {
+      document.querySelectorAll('.check-item').forEach(item => {
+        item.addEventListener('click', function() {
+          this.classList.toggle('done');
+        });
+      });
+    }
+  }
+  // Update header title
+  const titles = {saisie:'Saisie & OCR',clotures:'Clôture Annuelle',etats:'États Financiers',fiscalite:'Fiscalité',ged:'Portail GED',veille:'Veille Juridique'};
+  const ht = document.querySelector('.header-title');
+  if (ht) ht.innerHTML = `<span>${titles[section]||'Dashboard'}</span><span>${section === 'saisie' ? 'Simulation OCR' : 'Mode démonstration'}</span>`;
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
+// ====== KPI TICKER ======
+function animateKPI(){
+  let v=2847500;
+  setInterval(()=>{v+=Math.floor((Math.random()-0.3)*500);const el=document.getElementById('kpi-ca');if(el)el.textContent=v.toLocaleString('fr-FR')},4000)
+}
+
+// ====== INIT ======
 applyLang('fr');
 animateKPI();
 </script>
