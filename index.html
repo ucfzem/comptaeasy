@@ -670,7 +670,7 @@ html[dir="rtl"] .nav-item.active::before {
     </div>
   </aside>
   <header class="header">
-    <div class="header-title"><span data-i18n="dashboard.title">Tableau de bord</span><span data-i18n="dashboard.subtitle">Vue d'ensemble — Exercice 2024</span></div>
+    <div class="header-title" style="display:flex;align-items:center;gap:10px"><span class="logo-icon" style="width:28px;height:28px;font-size:13px">CE</span><div><span style="font-size:15px;font-weight:600;color:var(--text-primary);cursor:pointer" id="header-name" onclick="renameCabinet()" data-tip="Cliquer pour renommer">Cabinet Expert</span><span style="font-size:12px;font-weight:400;color:var(--text-muted);display:block;margin-top:1px">Exercice 2024</span></div></div>
     <div class="header-actions">
       <div class="lang-selector" role="group" aria-label="Language selector">
         <button class="lang-btn active" onclick="setLang('fr')">FR</button>
@@ -967,9 +967,18 @@ function navigate(section, e) {
   }
   // Update header title
   const titles = {saisie:'Saisie & OCR',clotures:'Clôture Annuelle',etats:'États Financiers',fiscalite:'Fiscalité',ged:'Portail GED',veille:'Veille Juridique'};
+  const cabinetName = document.getElementById('header-name')?.textContent || 'Cabinet';
   const ht = document.querySelector('.header-title');
-  if (ht) ht.innerHTML = `<span>${titles[section]||'Dashboard'}</span><span>${section === 'saisie' ? 'Simulation OCR' : 'Mode démonstration'}</span>`;
+  if (ht) ht.innerHTML = `<span class="logo-icon" style="width:28px;height:28px;font-size:13px;display:inline-flex;margin-inline-end:10px">CE</span><div><span style="font-size:15px;font-weight:600;color:var(--text-primary)">${titles[section]||'Dashboard'}</span><span style="font-size:12px;font-weight:400;color:var(--text-muted);display:block;margin-top:1px">${cabinetName} · Mode démo</span></div>`;
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ====== RENAME CABINET ======
+function renameCabinet() {
+  const el = document.getElementById('header-name');
+  const current = el.textContent;
+  const name = prompt('Nom du cabinet :', current);
+  if (name && name.trim()) el.textContent = name.trim();
 }
 
 // ====== KPI TICKER ======
