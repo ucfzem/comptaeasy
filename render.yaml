@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: comptaeasy-api
+    env: node
+    branch: api
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: GEMINI_KEY
+        sync: false

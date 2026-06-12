@@ -1,0 +1,1279 @@
+<!DOCTYPE html><html lang="fr" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ComptaEasy — Plateforme Comptable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg-base:       #080D1A;
+  --bg-surface:    #0E1525;
+  --bg-card:       #131D2E;
+  --bg-card-hover: #182236;
+  --bg-input:      #1A2540;
+  --border:        rgba(255,255,255,0.07);
+  --border-focus:  rgba(99,130,255,0.5);
+  --accent:        #4F6EFF;
+  --accent-glow:   rgba(79,110,255,0.2);
+  --accent-dim:    #2D4BD6;
+  --green:         #10B981;
+  --green-dim:     rgba(16,185,129,0.15);
+  --amber:         #F59E0B;
+  --amber-dim:     rgba(245,158,11,0.15);
+  --red:           #EF4444;
+  --red-dim:       rgba(239,68,68,0.15);
+  --purple:        #8B5CF6;
+  --purple-dim:    rgba(139,92,246,0.15);
+  --text-primary:   #F0F4FF;
+  --text-secondary: #8B9CC4;
+  --text-muted:     #4B5A7A;
+  --text-inverse:   #0A0F1E;
+  --font-ui:   'Inter', sans-serif;
+  --font-data: 'JetBrains Mono', monospace;
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --sidebar-w: 240px;
+  --header-h:  60px;
+  --transition: 0.2s ease;
+}
+body.light {
+  --bg-base:       #F1F4FA;
+  --bg-surface:    #FFFFFF;
+  --bg-card:       #FFFFFF;
+  --bg-card-hover: #F8FAFF;
+  --bg-input:      #EFF2F9;
+  --border:        rgba(0,0,0,0.08);
+  --text-primary:   #0A0F1E;
+  --text-secondary: #4B5A7A;
+  --text-muted:     #8B9CC4;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; scroll-behavior: smooth; }
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
+.app-shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr;
+  grid-template-rows: var(--header-h) 1fr;
+  min-height: 100vh;
+}
+.sidebar {
+  grid-row: 1 / -1;
+  background: var(--bg-surface);
+  border-inline-end: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  transition: var(--transition);
+  z-index: 100;
+}
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 20px;
+  height: var(--header-h);
+  border-block-end: 1px solid var(--border);
+}
+.logo-icon {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: white;
+  font-family: var(--font-data);
+  flex-shrink: 0;
+}
+.logo-text {
+  font-size: 15px; font-weight: 700;
+  background: linear-gradient(135deg, var(--text-primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.3px;
+}
+.sidebar-section {
+  padding: 16px 12px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding-inline-start: 16px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  margin: 1px 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  position: relative;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--bg-card); color: var(--text-primary); }
+.nav-item.active { background: var(--accent-glow); color: var(--accent); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 20%; height: 60%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+html[dir="rtl"] .nav-item.active::before {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  border-radius: 2px 0 0 2px;
+}
+.nav-icon { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.85; }
+.nav-badge {
+  margin-inline-start: auto;
+  background: var(--red);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-family: var(--font-data);
+}
+.nav-badge.amber { background: var(--amber); color: #000; }
+.sidebar-bottom { margin-top: auto; padding: 12px; border-block-start: 1px solid var(--border); }
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.user-card:hover { background: var(--bg-card); }
+.avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: white;
+  flex-shrink: 0;
+}
+.user-info { flex: 1; overflow: hidden; }
+.user-name { font-size: 12px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header {
+  grid-column: 2;
+  background: var(--bg-surface);
+  border-block-end: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.header-title { font-size: 15px; font-weight: 600; color: var(--text-primary); flex: 1; }
+.header-title span { font-size: 12px; font-weight: 400; color: var(--text-muted); display: block; margin-top: 1px; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.lang-selector {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+}
+.lang-btn {
+  padding: 4px 9px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-ui);
+}
+.lang-btn:hover { color: var(--text-primary); }
+.lang-btn.active { background: var(--accent); color: white; }
+.icon-btn {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: var(--transition);
+  position: relative;
+  flex-shrink: 0;
+}
+.icon-btn:hover { color: var(--text-primary); border-color: var(--border-focus); }
+.notif-dot {
+  position: absolute;
+  top: 6px; inset-inline-end: 6px;
+  width: 6px; height: 6px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 2px solid var(--bg-surface);
+}
+.main-content {
+  grid-column: 2;
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.ticker-bar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+  position: relative;
+}
+.ticker-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  flex-shrink: 0;
+  padding-inline-end: 20px;
+  border-inline-end: 1px solid var(--border);
+  font-family: var(--font-data);
+}
+.ticker-track { flex: 1; overflow: hidden; padding-inline-start: 20px; }
+.ticker-inner {
+  display: flex;
+  gap: 40px;
+  animation: ticker-scroll 28s linear infinite;
+  white-space: nowrap;
+}
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-data);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.ticker-item-label { color: var(--text-muted); font-size: 11px; }
+.ticker-item-value { color: var(--text-primary); font-weight: 600; }
+.ticker-item-delta { font-size: 11px; padding: 1px 5px; border-radius: 4px; }
+.ticker-item-delta.up   { color: var(--green); background: var(--green-dim); }
+.ticker-item-delta.down { color: var(--red);   background: var(--red-dim); }
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; inset-inline-start: 0; inset-inline-end: 0;
+  height: 2px;
+  opacity: 0;
+  transition: var(--transition);
+}
+.kpi-card:hover { background: var(--bg-card-hover); border-color: rgba(255,255,255,0.12); }
+.kpi-card:hover::after { opacity: 1; }
+.kpi-card.c-blue::after   { background: var(--accent); }
+.kpi-card.c-green::after  { background: var(--green); }
+.kpi-card.c-amber::after  { background: var(--amber); }
+.kpi-card.c-purple::after { background: var(--purple); }
+.kpi-header { display: flex; align-items: flex-start; justify-content: space-between; }
+.kpi-icon-wrap {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+}
+.kpi-icon-wrap.blue   { background: var(--accent-glow); color: var(--accent); }
+.kpi-icon-wrap.green  { background: var(--green-dim);   color: var(--green); }
+.kpi-icon-wrap.amber  { background: var(--amber-dim);   color: var(--amber); }
+.kpi-icon-wrap.purple { background: var(--purple-dim);  color: var(--purple); }
+.kpi-trend {
+  font-family: var(--font-data);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.kpi-trend.up   { color: var(--green); background: var(--green-dim); }
+.kpi-trend.down { color: var(--red);   background: var(--red-dim); }
+.kpi-trend.flat { color: var(--amber); background: var(--amber-dim); }
+.kpi-value {
+  font-family: var(--font-data);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+.kpi-value sup { font-size: 14px; font-weight: 500; color: var(--text-secondary); margin-inline-end: 2px; vertical-align: super; }
+.kpi-label { font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-top: 2px; }
+.kpi-sub { font-size: 11px; color: var(--text-muted); }
+.sparkline-wrap { height: 32px; }
+.sparkline { width: 100%; height: 100%; overflow: visible; }
+.dual-panel { display: grid; grid-template-columns: 1fr 360px; gap: 14px; }
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-block-end: 1px solid var(--border);
+}
+.card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+.card-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-family: var(--font-data);
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+.card-action {
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+  background: none;
+  border: none;
+  font-family: var(--font-ui);
+}
+.card-action:hover { color: #7B95FF; }
+.data-table-wrap { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table thead tr { border-block-end: 1px solid var(--border); }
+.data-table th {
+  padding: 10px 20px;
+  text-align: start;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+}
+.data-table th:hover { color: var(--text-secondary); }
+.data-table td { padding: 11px 20px; color: var(--text-secondary); border-block-end: 1px solid var(--border); white-space: nowrap; }
+.data-table tr:last-child td { border-block-end: none; }
+.data-table tr:hover td { background: var(--bg-card-hover); color: var(--text-primary); }
+.data-table .mono { font-family: var(--font-data); font-size: 12px; color: var(--text-primary); }
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-pill::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.status-pill.validated  { color: var(--green); background: var(--green-dim); }
+.status-pill.pending    { color: var(--amber); background: var(--amber-dim); }
+.status-pill.overdue    { color: var(--red);   background: var(--red-dim); }
+.status-pill.processing { color: var(--accent); background: var(--accent-glow); }
+.alerts-list { display: flex; flex-direction: column; gap: 0; }
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 20px;
+  border-block-end: 1px solid var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.alert-item:last-child { border-block-end: none; }
+.alert-item:hover { background: var(--bg-card-hover); }
+.alert-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.alert-dot.red    { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.alert-dot.amber  { background: var(--amber); }
+.alert-dot.blue   { background: var(--accent); }
+.alert-dot.green  { background: var(--green); }
+.alert-body { flex: 1; }
+.alert-title { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.alert-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+.alert-date { font-family: var(--font-data); font-size: 11px; color: var(--text-muted); white-space: nowrap; flex-shrink: 0; margin-top: 2px; }
+.alert-date.urgent { color: var(--red); font-weight: 600; }
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.checklist { display: flex; flex-direction: column; gap: 2px; padding: 12px 20px 16px; }
+.check-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: var(--transition); }
+.check-item:hover { color: var(--text-primary); }
+.check-box { width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: var(--transition); }
+.check-item.done .check-box { background: var(--green); border-color: var(--green); color: white; }
+.check-item.done .check-label { text-decoration: line-through; color: var(--text-muted); }
+.progress-bar-wrap { padding: 0 20px 16px; }
+.progress-bar-track { height: 4px; background: var(--bg-input); border-radius: 2px; overflow: hidden; margin-bottom: 6px; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--purple)); border-radius: 2px; transition: width 0.5s ease; }
+.progress-label { font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
+.chart-wrap { padding: 16px 20px 20px; }
+.chart-legend { display: flex; gap: 16px; margin-bottom: 14px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+.ai-panel { padding: 14px 20px 18px; }
+.ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--purple-dim);
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(139,92,246,0.2);
+}
+.ai-msg {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 11px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+.ai-msg strong { color: var(--text-primary); }
+.ai-input-row { display: flex; gap: 8px; }
+.ai-input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  transition: var(--transition);
+  outline: none;
+}
+.ai-input::placeholder { color: var(--text-muted); }
+.ai-input:focus { border-color: var(--border-focus); }
+.ai-send-btn {
+  width: 34px; height: 34px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.ai-send-btn:hover { background: var(--accent-dim); }
+.ai-suggestions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ai-suggestion-chip {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.ai-suggestion-chip:hover { border-color: var(--accent); color: var(--accent); }
+.theme-toggle {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: var(--transition);
+}
+.theme-toggle:hover { color: var(--text-primary); }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+@media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } .dual-panel { grid-template-columns: 1fr; } .bottom-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 768px) { :root { --sidebar-w: 0px; } .sidebar { display: none; } .kpi-grid { grid-template-columns: 1fr 1fr; } .bottom-grid { grid-template-columns: 1fr; } }
+.text-green  { color: var(--green); }
+.text-red    { color: var(--red); }
+.text-amber  { color: var(--amber); }
+.text-accent { color: var(--accent); }
+.text-mono   { font-family: var(--font-data); }
+.hidden      { display: none !important; }
+[data-tip] { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 999;
+}
+[data-tip]:hover::after { opacity: 1; }
+.notif-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  inset-inline-end: 0;
+  width: 300px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+  z-index: 200;
+  overflow: hidden;
+}
+.notif-dropdown.open { display: block; }
+.notif-header {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-block-end: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.notif-mark-all { font-size: 11px; color: var(--accent); cursor: pointer; font-weight: 500; }
+.notif-item {
+  display: flex;
+  gap: 10px;
+  padding: 11px 16px;
+  border-block-end: 1px solid var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.notif-item:last-child { border-block-end: none; }
+.notif-item:hover { background: var(--bg-card); }
+.notif-item.unread { background: rgba(79,110,255,0.04); }
+.notif-icon { width: 28px; height: 28px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+.notif-text { font-size: 11.5px; color: var(--text-secondary); line-height: 1.45; }
+.notif-text strong { color: var(--text-primary); font-weight: 600; }
+.notif-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: var(--font-data); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">CE</div>
+      <div class="logo-text">ComptaEasy</div>
+    </div>
+    <div class="sidebar-section" data-i18n="nav.section.core">Principal</div>
+    <a class="nav-item active" href="#" onclick="navigate('dashboard',event)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+      <span data-i18n="nav.dashboard">Tableau de bord</span>
+    </a>
+    <a class="nav-item" href="#" onclick="navigate('saisie',event)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h8M2 12h5"/><path d="M13 10l2 2-2 2"/></svg>
+      <span data-i18n="nav.saisie">Saisie & Automatisation</span>
+      <span class="nav-badge amber">3</span>
+    </a>
+    <a class="nav-item" href="#" onclick="navigate('clotures',event)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1v3M12 1v3M1 6h14M3 3h10a1 1 0 011 1v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M5 9l2 2 4-3"/></svg>
+      <span data-i18n="nav.clotures">Clôtures Annuelles</span>
+    </a>
+    <a class="nav-item" href="#" onclick="navigate('etats',event)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 1h10l2 2v12H1V3z"/><path d="M11 1v3h3M5 7h6M5 10h4"/></svg>
+      <span data-i18n="nav.etats">États Financiers</span>
+    </a>
+    <div class="sidebar-section" data-i18n="nav.section.fiscal">Fiscal & Compliance</div>
+    <a class="nav-item" href="#" onclick="navigate('fiscalite',event)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4v4l3 2"/></svg>
+      <span data-i18n="nav.fiscalite">Module Fiscalité</span>
+      <span class="nav-badge">!</span>
+    </a>
+    <a class="nav-item" href="#" onclick="navigate('ged',event)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l5 4v9H3V5z"/><path d="M3 5h5V1"/><path d="M5 10h6M5 12.5h4"/></svg>
+      <span data-i18n="nav.ged">Portail GED Clients</span>
+    </a>
+    <a class="nav-item" href="#" onclick="navigate('veille',event)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1a7 7 0 100 14A7 7 0 008 1z"/><path d="M8 5v3.5L10.5 10"/></svg>
+      <span data-i18n="nav.veille">Veille Juridique & IA</span>
+    </a>
+    <div class="sidebar-section" data-i18n="nav.section.config">Configuration</div>
+    <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M1.5 14c0-3.037 2.91-5.5 6.5-5.5s6.5 2.463 6.5 5.5"/></svg><span data-i18n="nav.clients">Dossiers Clients</span></a>
+    <a class="nav-item" href="#"><svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M2.93 2.93l1.41 1.41M11.66 11.66l1.41 1.41M2.93 13.07l1.41-1.41M11.66 4.34l1.41-1.41"/></svg><span data-i18n="nav.parametres">Paramètres</span></a>
+    <div class="sidebar-bottom">
+      <div class="user-card">
+        <div class="avatar">MC</div>
+        <div class="user-info">
+          <div class="user-name">Marie Chevalier</div>
+          <div class="user-role" data-i18n="user.role">Expert-Comptable</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);flex-shrink:0"><path d="M4 6l4 4 4-4"/></svg>
+      </div>
+    </div>
+  </aside>
+  <header class="header">
+    <div class="header-title" style="display:flex;align-items:center;gap:10px"><span class="logo-icon" style="width:28px;height:28px;font-size:13px">CE</span><div><span style="font-size:15px;font-weight:600;color:var(--text-primary);cursor:pointer" id="header-name" onclick="renameCabinet()" data-tip="Cliquer pour renommer">Cabinet Expert</span><span style="font-size:12px;font-weight:400;color:var(--text-muted);display:block;margin-top:1px">Exercice 2024</span></div></div>
+    <div class="header-actions">
+      <div class="lang-selector" role="group" aria-label="Language selector">
+        <button class="lang-btn active" onclick="setLang('fr')">FR</button>
+        <button class="lang-btn" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" onclick="setLang('es')">ES</button>
+        <button class="lang-btn" onclick="setLang('ar')">AR</button>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" data-tip="Mode clair/sombre">
+        <svg id="theme-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v2M8 13v2M1 8h2M13 8h2M2.93 2.93l1.41 1.41M11.66 11.66l1.41 1.41M2.93 13.07l1.41-1.41M11.66 4.34l1.41-1.41"/><circle cx="8" cy="8" r="3"/></svg>
+      </button>
+      <div style="position:relative">
+        <button class="icon-btn" onclick="toggleNotifs()">
+          <div class="notif-dot"></div>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5a5 5 0 015 5v3l1.5 2h-13L3 9.5v-3a5 5 0 015-5z"/><path d="M6 13.5a2 2 0 004 0"/></svg>
+        </button>
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-header"><span data-i18n="notif.title">Notifications</span><span class="notif-mark-all" data-i18n="notif.markAll">Tout marquer lu</span></div>
+          <div class="notif-item unread"><div class="notif-icon" style="background:var(--red-dim);color:var(--red)">⚠</div><div><div class="notif-text"><strong data-i18n="notif.tva">Déclaration TVA</strong> — <span data-i18n="notif.tvaDesc">Échéance dans 3 jours</span></div><div class="notif-time">Il y a 2h</div></div></div>
+          <div class="notif-item unread"><div class="notif-icon" style="background:var(--green-dim);color:var(--green)">✓</div><div><div class="notif-text"><strong data-i18n="notif.lettrage">Lettrage automatique</strong> — <span data-i18n="notif.lettrageDesc">847 écritures lettrées</span></div><div class="notif-time">Il y a 4h</div></div></div>
+          <div class="notif-item"><div class="notif-icon" style="background:var(--accent-glow);color:var(--accent)">↑</div><div><div class="notif-text"><strong data-i18n="notif.client">Client Dupont SA</strong> — <span data-i18n="notif.clientDesc">5 nouvelles pièces déposées</span></div><div class="notif-time">Hier</div></div></div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main class="main-content">
+    <div class="ticker-bar">
+      <div class="ticker-label" data-i18n="ticker.label">Live KPI</div>
+      <div class="ticker-track"><div class="ticker-inner" id="ticker-inner">
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.ca">CA Cumulé</span><span class="ticker-item-value" id="t-ca">2 847 500 €</span><span class="ticker-item-delta up">+8.4%</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.tva">TVA Collectée</span><span class="ticker-item-value">569 500 €</span><span class="ticker-item-delta up">+8.4%</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.clients">Clients Actifs</span><span class="ticker-item-value">47</span><span class="ticker-item-delta up">+2</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.ecritures">Écritures/Mois</span><span class="ticker-item-value">1 284</span><span class="ticker-item-delta down">-3.1%</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.is">Provision IS</span><span class="ticker-item-value">142 375 €</span><span class="ticker-item-delta flat">~</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.amort">Amortissements</span><span class="ticker-item-value">38 900 €</span><span class="ticker-item-delta up">+1.2%</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.ca">CA Cumulé</span><span class="ticker-item-value">2 847 500 €</span><span class="ticker-item-delta up">+8.4%</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.tva">TVA Collectée</span><span class="ticker-item-value">569 500 €</span><span class="ticker-item-delta up">+8.4%</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.clients">Clients Actifs</span><span class="ticker-item-value">47</span><span class="ticker-item-delta up">+2</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.ecritures">Écritures/Mois</span><span class="ticker-item-value">1 284</span><span class="ticker-item-delta down">-3.1%</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.is">Provision IS</span><span class="ticker-item-value">142 375 €</span><span class="ticker-item-delta flat">~</span></div>
+        <div class="ticker-item"><span class="ticker-item-label" data-i18n="ticker.amort">Amortissements</span><span class="ticker-item-value">38 900 €</span><span class="ticker-item-delta up">+1.2%</span></div>
+      </div></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card c-blue"><div class="kpi-header"><div class="kpi-icon-wrap blue"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13V7l6-5 6 5v6H10V9H6v4z"/></svg></div><div class="kpi-trend up">↑ +8.4%</div></div><div><div class="kpi-value"><sup>€</sup><span id="kpi-ca">2 847 500</span></div><div class="kpi-label" data-i18n="kpi.ca">Chiffre d'Affaires</div><div class="kpi-sub" data-i18n="kpi.ca.sub">Exercice 2024 cumulé</div></div><div class="sparkline-wrap"><svg class="sparkline" viewBox="0 0 120 32" preserveAspectRatio="none"><defs><linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4F6EFF" stop-opacity="0.3"/><stop offset="100%" stop-color="#4F6EFF" stop-opacity="0"/></linearGradient></defs><path d="M0 28 C10 25, 20 20, 30 22 S50 14, 60 12 S80 8, 90 6 S110 4, 120 2" fill="none" stroke="#4F6EFF" stroke-width="1.5"/><path d="M0 28 C10 25, 20 20, 30 22 S50 14, 60 12 S80 8, 90 6 S110 4, 120 2 V32 H0 Z" fill="url(#sg1)"/></svg></div></div>
+      <div class="kpi-card c-green"><div class="kpi-header"><div class="kpi-icon-wrap green"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M5.5 8.5l2 2 3-3.5"/></svg></div><div class="kpi-trend up">↑ +5.2%</div></div><div><div class="kpi-value"><sup>€</sup><span>418 340</span></div><div class="kpi-label" data-i18n="kpi.resultat">Résultat Net</div><div class="kpi-sub" data-i18n="kpi.resultat.sub">Après IS estimé</div></div><div class="sparkline-wrap"><svg class="sparkline" viewBox="0 0 120 32" preserveAspectRatio="none"><defs><linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10B981" stop-opacity="0.3"/><stop offset="100%" stop-color="#10B981" stop-opacity="0"/></linearGradient></defs><path d="M0 26 C15 24, 25 22, 40 20 S60 16, 75 14 S95 10, 120 6" fill="none" stroke="#10B981" stroke-width="1.5"/><path d="M0 26 C15 24, 25 22, 40 20 S60 16, 75 14 S95 10, 120 6 V32 H0 Z" fill="url(#sg2)"/></svg></div></div>
+      <div class="kpi-card c-amber"><div class="kpi-header"><div class="kpi-icon-wrap amber"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1l1.8 3.6L14 5.6l-3 3 .7 4.2L8 10.8 4.3 12.8l.7-4.2-3-3 4.2-.9z"/></svg></div><div class="kpi-trend flat">→ 3 jours</div></div><div><div class="kpi-value" style="font-size:20px"><span data-i18n="kpi.tva.label">TVA à déclarer</span></div><div class="kpi-label" data-i18n="kpi.tva">Déclaration CA3</div><div class="kpi-sub"><span style="color:var(--amber);font-family:var(--font-data)">15 Jan 2025</span> — <span data-i18n="kpi.tva.amount">569 500 €</span></div></div></div>
+      <div class="kpi-card c-purple"><div class="kpi-header"><div class="kpi-icon-wrap purple"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h4v4H2zM10 2h4v4h-4zM2 10h4v4H2zM10 10h4v4h-4z"/></svg></div><div class="kpi-trend up">↑ 91%</div></div><div><div class="kpi-value"><span>847</span><span style="font-size:14px;color:var(--text-secondary)"> / 930</span></div><div class="kpi-label" data-i18n="kpi.lettrage">Lettrage Automatique</div><div class="kpi-sub" data-i18n="kpi.lettrage.sub">Écritures lettrées ce mois</div></div></div>
+    </div>
+    <div class="dual-panel">
+      <div class="card"><div class="card-header"><div class="card-title"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h8"/></svg><span data-i18n="table.journals.title">Dernières Écritures Comptables</span><div class="card-badge">Journal Général</div></div><button class="card-action" data-i18n="action.viewAll">Voir tout →</button></div><div class="data-table-wrap"><table class="data-table"><thead><tr><th data-i18n="table.date">Date ↕</th><th data-i18n="table.piece">N° Pièce ↕</th><th data-i18n="table.libelle">Libellé</th><th data-i18n="table.compte">Compte</th><th data-i18n="table.debit">Débit (€)</th><th data-i18n="table.credit">Crédit (€)</th><th data-i18n="table.statut">Statut</th></tr></thead><tbody>
+        <tr><td class="mono">12/01/25</td><td class="mono">FAC-2025-0847</td><td>Fournitures bureau SARL Dupont</td><td class="mono">601100</td><td class="mono text-red">1 250,00</td><td class="mono">—</td><td><span class="status-pill validated" data-i18n="status.validated">Lettré</span></td></tr>
+        <tr><td class="mono">12/01/25</td><td class="mono">FAC-2025-0847</td><td>TVA déductible s/achat</td><td class="mono">445660</td><td class="mono text-red">250,00</td><td class="mono">—</td><td><span class="status-pill validated" data-i18n="status.validated">Lettré</span></td></tr>
+        <tr><td class="mono">11/01/25</td><td class="mono">VIR-2025-0211</td><td>Virement clients — Société Martin</td><td class="mono">411000</td><td class="mono">—</td><td class="mono text-green">4 800,00</td><td><span class="status-pill validated" data-i18n="status.validated">Lettré</span></td></tr>
+        <tr><td class="mono">11/01/25</td><td class="mono">OD-2025-0089</td><td>Dotation amort. matériel informatique</td><td class="mono">681110</td><td class="mono text-red">875,00</td><td class="mono">—</td><td><span class="status-pill processing" data-i18n="status.processing">En cours</span></td></tr>
+        <tr><td class="mono">10/01/25</td><td class="mono">FAC-2025-0839</td><td>Prestation conseil — Audit interne</td><td class="mono">622700</td><td class="mono text-red">3 200,00</td><td class="mono">—</td><td><span class="status-pill pending" data-i18n="status.pending">Non lettré</span></td></tr>
+        <tr><td class="mono">09/01/25</td><td class="mono">FAC-2025-0831</td><td>Loyer local commercial Q1</td><td class="mono">613200</td><td class="mono text-red">5 500,00</td><td class="mono">—</td><td><span class="status-pill overdue" data-i18n="status.overdue">En retard</span></td></tr>
+      </tbody></table></div></div>
+      <div class="card"><div class="card-header"><div class="card-title"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1.5a5 5 0 015 5v3l1.5 2h-13L3 9.5v-3a5 5 0 015-5z"/><path d="M6 13.5a2 2 0 004 0"/></svg><span data-i18n="alerts.title">Alertes & Échéances</span></div><button class="card-action" data-i18n="action.calendar">Calendrier →</button></div><div class="alerts-list">
+        <div class="alert-item"><div class="alert-dot red"></div><div class="alert-body"><div class="alert-title" data-i18n="alert.tva.title">Déclaration CA3 — TVA mensuelle</div><div class="alert-desc" data-i18n="alert.tva.desc">Montant à déclarer : 569 500 € — Compte 44571</div></div><div class="alert-date urgent">15 Jan</div></div>
+        <div class="alert-item"><div class="alert-dot amber"></div><div class="alert-body"><div class="alert-title" data-i18n="alert.is.title">Acompte IS — 4ème échéance</div><div class="alert-desc" data-i18n="alert.is.desc">Provision estimée : 35 593 €</div></div><div class="alert-date">15 Déc</div></div>
+        <div class="alert-item"><div class="alert-dot amber"></div><div class="alert-body"><div class="alert-title" data-i18n="alert.bilan.title">Clôture bilan — Dossier Martin SARL</div><div class="alert-desc" data-i18n="alert.bilan.desc">Inventaire physique non confirmé</div></div><div class="alert-date">31 Jan</div></div>
+        <div class="alert-item"><div class="alert-dot blue"></div><div class="alert-body"><div class="alert-title" data-i18n="alert.liasse.title">Liasse fiscale — Dossier Petit & Fils</div><div class="alert-desc" data-i18n="alert.liasse.desc">Télétransmission DGFiP en attente de validation</div></div><div class="alert-date">15 Fév</div></div>
+        <div class="alert-item"><div class="alert-dot green"></div><div class="alert-body"><div class="alert-title" data-i18n="alert.ocr.title">OCR — 12 factures en attente</div><div class="alert-desc" data-i18n="alert.ocr.desc">Reconnaissance automatique disponible</div></div><div class="alert-date">Maintenant</div></div>
+        <div class="alert-item"><div class="alert-dot amber"></div><div class="alert-body"><div class="alert-title" data-i18n="alert.cvae.title">Déclaration CVAE 2024</div><div class="alert-desc" data-i18n="alert.cvae.desc">Formulaire 1329-DEF à déposer</div></div><div class="alert-date">2 Mai</div></div>
+      </div></div>
+    </div>
+    <div class="bottom-grid">
+      <div class="card"><div class="card-header"><div class="card-title"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1v3M12 1v3M1 6h14M3 3h10a1 1 0 011 1v9a1 1 0 01-1 1H3a1 1 0 01-1-1V4a1 1 0 011-1z"/><path d="M5 9l2 2 4-3"/></svg><span data-i18n="checklist.title">Travaux d'Inventaire</span></div><button class="card-action" data-i18n="action.openModule">Ouvrir →</button></div><div class="progress-bar-wrap" style="padding:12px 20px 8px"><div class="progress-bar-track"><div class="progress-bar-fill" style="width:62%"></div></div><div class="progress-label"><span data-i18n="checklist.progress">Avancement clôture 2024</span><span class="text-mono" style="color:var(--accent)">62%</span></div></div><div class="checklist">
+        <div class="check-item done"><div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 5l2 2 4-3.5"/></svg></div><span class="check-label" data-i18n="check.rapprochement">Rapprochement bancaire</span></div>
+        <div class="check-item done"><div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 5l2 2 4-3.5"/></svg></div><span class="check-label" data-i18n="check.lettrage">Lettrage comptes tiers</span></div>
+        <div class="check-item done"><div class="check-box"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 5l2 2 4-3.5"/></svg></div><span class="check-label" data-i18n="check.amort">Calcul amortissements</span></div>
+        <div class="check-item"><div class="check-box"></div><span class="check-label" data-i18n="check.provisions">Dotations aux provisions</span></div>
+        <div class="check-item"><div class="check-box"></div><span class="check-label" data-i18n="check.stock">Valorisation des stocks</span></div>
+        <div class="check-item"><div class="check-box"></div><span class="check-label" data-i18n="check.bilan">Édition du bilan</span></div>
+      </div></div>
+      <div class="card"><div class="card-header"><div class="card-title"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 13L5 7l4 3 3-5 3 4"/></svg><span data-i18n="cashflow.title">Flux de Trésorerie</span></div><button class="card-action" data-i18n="action.detail">Détail →</button></div><div class="chart-wrap"><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div><span data-i18n="cashflow.encaissements">Encaissements</span></div><div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div><span data-i18n="cashflow.decaissements">Décaissements</span></div></div><svg viewBox="0 0 280 110" style="width:100%;overflow:visible"><defs><linearGradient id="barG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10B981" stop-opacity="0.9"/><stop offset="100%" stop-color="#10B981" stop-opacity="0.5"/></linearGradient><linearGradient id="barR" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EF4444" stop-opacity="0.9"/><stop offset="100%" stop-color="#EF4444" stop-opacity="0.5"/></linearGradient></defs><line x1="0" y1="0" x2="280" y2="0" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><line x1="0" y1="27" x2="280" y2="27" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><line x1="0" y1="54" x2="280" y2="54" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><line x1="0" y1="81" x2="280" y2="81" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><rect x="2" y="20" width="16" height="62" rx="3" fill="url(#barG)"/><rect x="20" y="38" width="16" height="44" rx="3" fill="url(#barR)"/><rect x="44" y="15" width="16" height="67" rx="3" fill="url(#barG)"/><rect x="62" y="30" width="16" height="52" rx="3" fill="url(#barR)"/><rect x="86" y="10" width="16" height="72" rx="3" fill="url(#barG)"/><rect x="104" y="35" width="16" height="47" rx="3" fill="url(#barR)"/><rect x="128" y="8" width="16" height="74" rx="3" fill="url(#barG)"/><rect x="146" y="28" width="16" height="54" rx="3" fill="url(#barR)"/><rect x="170" y="5" width="16" height="77" rx="3" fill="url(#barG)"/><rect x="188" y="25" width="16" height="57" rx="3" fill="url(#barR)"/><rect x="212" y="3" width="16" height="79" rx="3" fill="url(#barG)"/><rect x="230" y="22" width="16" height="60" rx="3" fill="url(#barR)"/><text x="14" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Juil</text><text x="56" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Août</text><text x="98" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Sept</text><text x="140" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Oct</text><text x="182" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Nov</text><text x="224" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Déc</text></svg></div></div>
+      <div class="card"><div class="card-header"><div class="card-title"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M6 6.5s0-2 2-2 2 1.5 0 2.5-2 1.5-2 1.5v1M8 12v.5"/></svg><span data-i18n="ai.title">Assistant IA Fiscal</span></div><div class="card-badge">Beta</div></div><div class="ai-panel"><div class="ai-chip"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="8"/></svg><span data-i18n="ai.status">Actif — claude-sonnet</span></div><div class="ai-msg" id="ai-response"><strong data-i18n="ai.greeting">Bonjour Marie.</strong> <span data-i18n="ai.greeting.msg">J'ai détecté <strong>2 anomalies</strong> dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2025-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?</span></div><div class="ai-input-row"><input class="ai-input" id="ai-input" type="text" data-i18n-placeholder="ai.placeholder" placeholder="Posez une question de doctrine fiscale…"/><button class="ai-send-btn" onclick="askAI()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2L2 7l5 3 3 5 4-13z"/></svg></button></div><div class="ai-suggestions"><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug1">Taux IS applicable ?</div><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug2">Régime TVA réel normal</div><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug3">Optimisation IS 2024</div></div></div></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ====== LOCAL AI RESPONSES (Demo mode — no API key needed) ======
+const AI_ANSWERS = {
+  fr: [
+    {q:"taux is",a:"Le taux normal de l'IS est fixé à 25% pour les exercices ouverts depuis 2022. Le taux réduit de 15% s'applique sur la fraction du bénéfice ≤ 42 622 € (PME éligibles). Pour les TPE, le taux peut être ramené à 10% sous conditions (art. 219 CGI)."},
+    {q:"tva",a:"Le régime réel normal de TVA s'applique aux entreprises avec CA > 840 000 € (ventes) ou > 254 000 € (prestations). Déclaration mensuelle CA3. Taux normal : 20%, intermédiaire : 10%, réduit : 5,5%."},
+    {q:"optimisation",a:"Pour optimiser l'IS 2024 : 1. Provisionner les risques avant le 31/12, 2. Maximiser les amortissements dégressifs, 3. Intégrer le crédit d'impôt recherche (CIR), 4. Utiliser le régime des sociétés mères (plus-values nettes)."},
+    {q:"amort",a:"Dégressif : 1,25× linéaire pour +6 ans, 1,75× pour +4 ans, 2,25× pour +3 ans. Linéaire recommandé pour les biens de faible valeur."},
+    {q:"cvae",a:"CVAE calculée sur la valeur ajoutée produite (VA ≤ 7 630 000 €). Taux variable de 0% à 1,5%. Déclaration 1329-DEF au 2 mai 2025."},
+    {q:"fec",a:"FEC (Fichier des Écritures Comptables) obligatoire en cas de contrôle DGFiP. Norme 2013 : 15 colonnes, format CSV/UTF-8. Délai de transmission : 15 jours ouvrés."},
+    {q:"bofip",a:"BOFIP-BIC : les provisions pour risques doivent être justifiées par un litige ou un risque avéré. Le simple risque de change ou de taux n'est pas provisionnable."},
+    {q:"default",a:"Bonjour Marie. J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2025-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?"}
+  ],
+  en: [{q:"taux is",a:"The standard CIT rate is 25% for fiscal years starting in 2022. Reduced rate of 15% applies on profit ≤ €42,622 for eligible SMEs."},{q:"tva",a:"Standard VAT regime for companies with revenue > €840K (goods) or > €254K (services). Monthly CA3 return. Standard rate: 20%."},{q:"default",a:"Hello Marie. I detected 2 anomalies in January entries: a €12.50 VAT discrepancy and a misallocated account 622700."}],
+  es: [{q:"taux is",a:"El tipo general del IS es del 25% para ejercicios desde 2022. Tipo reducido del 15% para beneficios ≤ 42.622 € (PYME)."},{q:"default",a:"Buenos días, Marie. He detectado 2 anomalías en los asientos de enero."}],
+  ar: [{q:"taux is",a:"معدل ضريبة الشركات القياسي هو 25% للسنة المالية 2022 فما بعد. المعدل المخفض 15%"},{q:"default",a:"مرحباً ماري. اكتشفت شذوذَين في قيود يناير."}]
+};
+
+function findAIAnswer(q, lang) {
+  const answers = AI_ANSWERS[lang] || AI_ANSWERS.fr;
+  const ql = q.toLowerCase();
+  for (const a of answers) {
+    if (ql.includes(a.q)) return a.a;
+  }
+  return answers.find(a => a.q === "default").a;
+}
+
+const i18n = {
+  fr: {
+    "nav.section.core":"Principal","nav.section.fiscal":"Fiscal & Conformité","nav.section.config":"Configuration","nav.dashboard":"Tableau de bord","nav.saisie":"Saisie & Automatisation","nav.clotures":"Clôtures Annuelles","nav.etats":"États Financiers","nav.fiscalite":"Module Fiscalité","nav.ged":"Portail GED Clients","nav.veille":"Veille Juridique & IA","nav.clients":"Dossiers Clients","nav.parametres":"Paramètres","user.role":"Expert-Comptable","dashboard.title":"Tableau de bord","dashboard.subtitle":"Vue d'ensemble — Exercice 2024","notif.title":"Notifications","notif.markAll":"Tout marquer lu","notif.tva":"Déclaration TVA","notif.tvaDesc":"Échéance dans 3 jours","notif.lettrage":"Lettrage automatique","notif.lettrageDesc":"847 écritures lettrées","notif.client":"Client Dupont SA","notif.clientDesc":"5 nouvelles pièces déposées","ticker.label":"KPI LIVE","ticker.ca":"CA Cumulé","ticker.tva":"TVA Collectée","ticker.clients":"Clients Actifs","ticker.ecritures":"Écritures/Mois","ticker.is":"Provision IS","ticker.amort":"Amortissements","kpi.ca":"Chiffre d'Affaires","kpi.ca.sub":"Exercice 2024 cumulé","kpi.resultat":"Résultat Net","kpi.resultat.sub":"Après IS estimé","kpi.tva.label":"TVA à déclarer","kpi.tva":"Déclaration CA3","kpi.tva.amount":"Montant : 569 500 €","kpi.lettrage":"Lettrage Automatique","kpi.lettrage.sub":"Écritures lettrées ce mois","table.journals.title":"Dernières Écritures Comptables","table.date":"Date ↕","table.piece":"N° Pièce ↕","table.libelle":"Libellé","table.compte":"Compte","table.debit":"Débit (€)","table.credit":"Crédit (€)","table.statut":"Statut","status.validated":"Lettré","status.pending":"Non lettré","status.overdue":"En retard","status.processing":"En cours","action.viewAll":"Voir tout →","action.calendar":"Calendrier →","action.openModule":"Ouvrir →","action.detail":"Détail →","alerts.title":"Alertes & Échéances","alert.tva.title":"Déclaration CA3 — TVA mensuelle","alert.tva.desc":"Montant à déclarer : 569 500 € — Compte 44571","alert.is.title":"Acompte IS — 4ème échéance","alert.is.desc":"Provision estimée : 35 593 €","alert.bilan.title":"Clôture bilan — Dossier Martin SARL","alert.bilan.desc":"Inventaire physique non confirmé","alert.liasse.title":"Liasse fiscale — Dossier Petit & Fils","alert.liasse.desc":"Télétransmission DGFiP en attente de validation","alert.ocr.title":"OCR — 12 factures en attente","alert.ocr.desc":"Reconnaissance automatique disponible","alert.cvae.title":"Déclaration CVAE 2024","alert.cvae.desc":"Formulaire 1329-DEF à déposer","checklist.title":"Travaux d'Inventaire","checklist.progress":"Avancement clôture 2024","check.rapprochement":"Rapprochement bancaire","check.lettrage":"Lettrage comptes tiers","check.amort":"Calcul amortissements","check.provisions":"Dotations aux provisions","check.stock":"Valorisation des stocks","check.bilan":"Édition du bilan","cashflow.title":"Flux de Trésorerie","cashflow.encaissements":"Encaissements","cashflow.decaissements":"Décaissements","ai.title":"Assistant IA Fiscal","ai.status":"Assistant · Mode local","ai.greeting":"Bonjour Marie.","ai.greeting.msg":"J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2025-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?","ai.placeholder":"Posez une question de doctrine fiscale…","ai.sug1":"Taux IS applicable ?","ai.sug2":"Régime TVA réel normal","ai.sug3":"Optimisation IS 2024"
+  },
+  en: {
+    "nav.section.core":"Main","nav.section.fiscal":"Tax & Compliance","nav.section.config":"Settings","nav.dashboard":"Dashboard","nav.saisie":"Entry & Automation","nav.clotures":"Year-End Closing","nav.etats":"Financial Statements","nav.fiscalite":"Tax Module","nav.ged":"Client Document Portal","nav.veille":"Legal Watch & AI","nav.clients":"Client Files","nav.parametres":"Settings","user.role":"Certified Accountant (CPA)","dashboard.title":"Dashboard","dashboard.subtitle":"Overview — Fiscal Year 2024","notif.title":"Notifications","notif.markAll":"Mark all read","notif.tva":"VAT Return","notif.tvaDesc":"Due in 3 days","notif.lettrage":"Auto Reconciliation","notif.lettrageDesc":"847 entries reconciled","notif.client":"Client Dupont SA","notif.clientDesc":"5 new documents uploaded","ticker.label":"LIVE KPI","ticker.ca":"Cumulative Revenue","ticker.tva":"VAT Collected","ticker.clients":"Active Clients","ticker.ecritures":"Entries/Month","ticker.is":"Corp. Tax Provision","ticker.amort":"Depreciation","kpi.ca":"Revenue","kpi.ca.sub":"Fiscal year 2024 cumulative","kpi.resultat":"Net Income","kpi.resultat.sub":"After estimated corp. tax","kpi.tva.label":"VAT to file","kpi.tva":"VAT Return","kpi.tva.amount":"Amount: €569,500","kpi.lettrage":"Account Matching","kpi.lettrage.sub":"Entries reconciled this month","table.journals.title":"Latest Journal Entries","table.date":"Date ↕","table.piece":"Doc. No. ↕","table.libelle":"Description","table.compte":"Account","table.debit":"Debit (€)","table.credit":"Credit (€)","table.statut":"Status","status.validated":"Matched","status.pending":"Unmatched","status.overdue":"Overdue","status.processing":"Processing","action.viewAll":"View all →","action.calendar":"Calendar →","action.openModule":"Open →","action.detail":"Detail →","alerts.title":"Alerts & Deadlines","alert.tva.title":"Monthly VAT Return (CA3)","alert.tva.desc":"Amount to file: €569,500 — Account 44571","alert.is.title":"Corp. Tax Instalment — 4th payment","alert.is.desc":"Estimated provision: €35,593","alert.bilan.title":"Year-end closing — Martin SARL","alert.bilan.desc":"Physical inventory not confirmed","alert.liasse.title":"Tax Pack — Petit & Fils","alert.liasse.desc":"E-filing to DGFiP pending approval","alert.ocr.title":"OCR — 12 invoices pending","alert.ocr.desc":"Automated recognition available","alert.cvae.title":"CVAE Return 2024","alert.cvae.desc":"Form 1329-DEF to be filed","checklist.title":"Inventory Checklist","checklist.progress":"Year-end closing progress","check.rapprochement":"Bank reconciliation","check.lettrage":"Third-party account matching","check.amort":"Depreciation calculation","check.provisions":"Provision entries","check.stock":"Stock valuation","check.bilan":"Balance sheet issuance","cashflow.title":"Cash Flow","cashflow.encaissements":"Receipts","cashflow.decaissements":"Disbursements","ai.title":"AI Tax Assistant","ai.status":"Assistant · Local mode","ai.greeting":"Hello Marie.","ai.greeting.msg":"I detected 2 anomalies in January entries: a VAT discrepancy of €12.50 on invoice FAC-2025-0839 and an allocation to account 622700 that should be split across 622710. Shall I auto-correct?","ai.placeholder":"Ask a tax doctrine question…","ai.sug1":"Applicable CIT rate?","ai.sug2":"Standard VAT regime","ai.sug3":"CIT optimization 2024"
+  },
+  es: {
+    "nav.section.core":"Principal","nav.section.fiscal":"Fiscal & Cumplimiento","nav.section.config":"Configuración","nav.dashboard":"Panel de control","nav.saisie":"Captura & Automatización","nav.clotures":"Cierre Anual","nav.etats":"Estados Financieros","nav.fiscalite":"Módulo Fiscal","nav.ged":"Portal GED Clientes","nav.veille":"Alerta Jurídica & IA","nav.clients":"Expedientes Clientes","nav.parametres":"Ajustes","user.role":"Auditor-Contador","dashboard.title":"Panel de control","dashboard.subtitle":"Visión general — Ejercicio 2024","notif.title":"Notificaciones","notif.markAll":"Marcar todo leído","notif.tva":"Declaración IVA","notif.tvaDesc":"Vence en 3 días","notif.lettrage":"Conciliación automática","notif.lettrageDesc":"847 asientos conciliados","notif.client":"Cliente Dupont SA","notif.clientDesc":"5 nuevos documentos enviados","ticker.label":"KPI EN VIVO","ticker.ca":"Facturación Acum.","ticker.tva":"IVA Repercutido","ticker.clients":"Clientes Activos","ticker.ecritures":"Asientos/Mes","ticker.is":"Provisión IS","ticker.amort":"Amortizaciones","kpi.ca":"Facturación","kpi.ca.sub":"Ejercicio 2024 acumulado","kpi.resultat":"Resultado Neto","kpi.resultat.sub":"Tras IS estimado","kpi.tva.label":"IVA a declarar","kpi.tva":"Modelo 303 (IVA)","kpi.tva.amount":"Importe: 569.500 €","kpi.lettrage":"Conciliación de Cuentas","kpi.lettrage.sub":"Asientos conciliados este mes","table.journals.title":"Últimos Asientos Contables","table.date":"Fecha ↕","table.piece":"Nº Doc. ↕","table.libelle":"Descripción","table.compte":"Cuenta","table.debit":"Debe (€)","table.credit":"Haber (€)","table.statut":"Estado","status.validated":"Conciliado","status.pending":"Sin conciliar","status.overdue":"Vencido","status.processing":"En proceso","action.viewAll":"Ver todo →","action.calendar":"Calendario →","action.openModule":"Abrir →","action.detail":"Detalle →","alerts.title":"Alertas & Vencimientos","alert.tva.title":"Declaración IVA mensual (Mod. 303)","alert.tva.desc":"Importe: 569.500 € — Cuenta 47700","alert.is.title":"Pago fraccionado IS — 4º plazo","alert.is.desc":"Provisión estimada: 35.593 €","alert.bilan.title":"Cierre anual — Expediente Martin SARL","alert.bilan.desc":"Inventario físico sin confirmar","alert.liasse.title":"Declaración fiscal — Petit & Fils","alert.liasse.desc":"Presentación telemática pendiente","alert.ocr.title":"OCR — 12 facturas pendientes","alert.ocr.desc":"Reconocimiento automático disponible","alert.cvae.title":"Declaración CVAE 2024","alert.cvae.desc":"Formulario 1329-DEF a presentar","checklist.title":"Trabajos de Inventario","checklist.progress":"Avance cierre 2024","check.rapprochement":"Conciliación bancaria","check.lettrage":"Conciliación cuentas de terceros","check.amort":"Cálculo de amortizaciones","check.provisions":"Dotaciones a provisiones","check.stock":"Valoración de existencias","check.bilan":"Emisión del balance","cashflow.title":"Flujo de Caja","cashflow.encaissements":"Cobros","cashflow.decaissements":"Pagos","ai.title":"Asistente IA Fiscal","ai.status":"Asistente · Modo local","ai.greeting":"Buenos días, Marie.","ai.greeting.msg":"He detectado 2 anomalías en los asientos de enero: una diferencia de IVA de 12,50 € en la factura FAC-2025-0839 y una imputación a la cuenta 622700 que debería distribuirse en 622710. ¿Desea que lo corrija automáticamente?","ai.placeholder":"Haz una pregunta sobre doctrina fiscal…","ai.sug1":"¿Tipo IS aplicable?","ai.sug2":"Régimen IVA general","ai.sug3":"Optimización IS 2024"
+  },
+  ar: {
+    "nav.section.core":"الرئيسية","nav.section.fiscal":"الضريبة والامتثال","nav.section.config":"الإعدادات","nav.dashboard":"لوحة القيادة","nav.saisie":"الإدخال والأتمتة","nav.clotures":"الإقفال السنوي","nav.etats":"القوائم المالية","nav.fiscalite":"وحدة الضريبة","nav.ged":"بوابة العملاء","nav.veille":"اليقظة القانونية والذكاء الاصطناعي","nav.clients":"ملفات العملاء","nav.parametres":"الإعدادات","user.role":"محاسب قانوني معتمد","dashboard.title":"لوحة القيادة","dashboard.subtitle":"نظرة عامة — السنة المالية 2024","notif.title":"الإشعارات","notif.markAll":"وضع علامة مقروء للجميع","notif.tva":"إقرار ضريبة القيمة المضافة","notif.tvaDesc":"الموعد النهائي بعد 3 أيام","notif.lettrage":"المطابقة التلقائية","notif.lettrageDesc":"تمت مطابقة 847 قيداً","notif.client":"العميل Dupont SA","notif.clientDesc":"5 مستندات جديدة مُحمَّلة","ticker.label":"مؤشرات مباشرة","ticker.ca":"رقم الأعمال","ticker.tva":"ضريبة القيمة المضافة المحصلة","ticker.clients":"العملاء النشطون","ticker.ecritures":"قيود/شهر","ticker.is":"مخصص ضريبة الشركات","ticker.amort":"الاستهلاكات","kpi.ca":"رقم الأعمال","kpi.ca.sub":"السنة المالية 2024 إجمالي","kpi.resultat":"صافي الربح","kpi.resultat.sub":"بعد ضريبة الشركات التقديرية","kpi.tva.label":"ضريبة القيمة المضافة للإقرار","kpi.tva":"إقرار ضريبة القيمة المضافة","kpi.tva.amount":"المبلغ: 569,500 €","kpi.lettrage":"مطابقة الحسابات","kpi.lettrage.sub":"القيود المُطابَقة هذا الشهر","table.journals.title":"آخر القيود المحاسبية","table.date":"التاريخ ↕","table.piece":"رقم المستند ↕","table.libelle":"البيان","table.compte":"الحساب","table.debit":"مدين (€)","table.credit":"دائن (€)","table.statut":"الحالة","status.validated":"مُطابَق","status.pending":"غير مُطابَق","status.overdue":"متأخر","status.processing":"قيد المعالجة","action.viewAll":"عرض الكل →","action.calendar":"التقويم →","action.openModule":"فتح →","action.detail":"تفاصيل →","alerts.title":"التنبيهات والمواعيد النهائية","alert.tva.title":"إقرار ضريبة القيمة المضافة الشهري","alert.tva.desc":"المبلغ للإقرار: 569,500 € — الحساب 44571","alert.is.title":"دفعة ضريبة الشركات — القسط الرابع","alert.is.desc":"المخصص التقديري: 35,593 €","alert.bilan.title":"إقفال سنوي — ملف Martin SARL","alert.bilan.desc":"الجرد المادي غير مؤكد","alert.liasse.title":"الحزمة الضريبية — Petit & Fils","alert.liasse.desc":"الإرسال الإلكتروني في انتظار التحقق","alert.ocr.title":"OCR — 12 فاتورة معلقة","alert.ocr.desc":"التعرف التلقائي متاح","alert.cvae.title":"إقرار CVAE 2024","alert.cvae.desc":"نموذج 1329-DEF للإيداع","checklist.title":"أعمال الجرد","checklist.progress":"تقدم الإقفال السنوي 2024","check.rapprochement":"التسوية البنكية","check.lettrage":"مطابقة حسابات الأطراف الثالثة","check.amort":"حساب الاستهلاكات","check.provisions":"قيود المخصصات","check.stock":"تقييم المخزون","check.bilan":"إصدار الميزانية","cashflow.title":"التدفق النقدي","cashflow.encaissements":"المتحصلات","cashflow.decaissements":"المدفوعات","ai.title":"المساعد الضريبي بالذكاء الاصطناعي","ai.status":"المساعد · وضع محلي","ai.greeting":"مرحباً ماري.","ai.greeting.msg":"اكتشفت شذوذَين في قيود يناير: فرق ضريبة قيمة مضافة بقيمة 12.50 € في الفاتورة FAC-2025-0839، وتخصيص للحساب 622700 يجب توزيعه على 622710. هل تريدين التصحيح التلقائي؟","ai.placeholder":"اطرح سؤالاً عن الفقه الضريبي…","ai.sug1":"معدل ضريبة الشركات المطبق؟","ai.sug2":"نظام ضريبة القيمة المضافة العادي","ai.sug3":"تحسين ضريبة الشركات 2024"
+  }
+};
+let currentLang='fr',darkMode=!0,notifsOpen=!1;
+
+function applyLang(lang){
+  const d=i18n[lang]; if(!d)return;
+  currentLang=lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(d[k]){el.textContent=d[k]}});
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(d[k])el.placeholder=d[k]});
+  const ai=document.getElementById('ai-response');
+  if(ai&&d['ai.greeting']&&d['ai.greeting.msg'])ai.innerHTML=`<strong>${d['ai.greeting']}</strong> ${d['ai.greeting.msg']}`;
+  const rtl=lang==='ar';
+  document.documentElement.setAttribute('dir',rtl?'rtl':'ltr');
+  document.documentElement.setAttribute('lang',lang);
+  const labels={fr:['Juil','Août','Sept','Oct','Nov','Déc'],en:['Jul','Aug','Sep','Oct','Nov','Dec'],es:['Jul','Ago','Sep','Oct','Nov','Dic'],ar:['يول','أغس','سبت','أكت','نوف','ديس']}[lang]||monthLabels.fr;
+  const xs=[14,56,98,140,182,224];
+  const txt=document.querySelectorAll('svg text');
+  if(txt.length>=6)labels.forEach((l,i)=>{if(txt[i])txt[i].textContent=l});
+}
+
+function setLang(lang){
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  [{fr:0,en:1,es:2,ar:3}].forEach(m=>{const btns=document.querySelectorAll('.lang-btn');if(btns[m[lang]])btns[m[lang]].classList.add('active')});
+  applyLang(lang)
+}
+
+function toggleTheme(){
+  darkMode=!darkMode;
+  document.body.classList.toggle('light',!darkMode);
+  const icon=document.getElementById('theme-icon');
+  if(darkMode)icon.innerHTML='<path d="M8 1v2M8 13v2M1 8h2M13 8h2M2.93 2.93l1.41 1.41M11.66 11.66l1.41 1.41M2.93 13.07l1.41-1.41M11.66 4.34l1.41-1.41"/><circle cx="8" cy="8" r="3"/>';
+  else icon.innerHTML='<path d="M13.5 8A5.5 5.5 0 012.2 5.2a6 6 0 1010.8 7.1 5.5 5.5 0 01.5-4.3z"/>'
+}
+
+function toggleNotifs(){notifsOpen=!notifsOpen;document.getElementById('notif-dropdown').classList.toggle('open',notifsOpen)}
+document.addEventListener('click',e=>{if(notifsOpen&&!e.target.closest('.icon-btn')&&!e.target.closest('#notif-dropdown')){notifsOpen=!1;document.getElementById('notif-dropdown').classList.remove('open')}});
+function navigate(s,e){e.preventDefault();document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));e.currentTarget.classList.add('active')}
+
+function askAI() {
+  const input=document.getElementById('ai-input');
+  const q=input.value.trim();
+  if(!q)return;
+  const resp=document.getElementById('ai-response');
+  input.value='';
+  resp.innerHTML='<span style="color:var(--text-muted);font-style:italic">⟳ Analyse en cours…</span>';
+  setTimeout(() => {
+    const answer = findAIAnswer(q, currentLang);
+    resp.innerHTML = answer.replace(/\n/g,'<br>');
+  }, 800);
+}
+
+function fillAI(el){document.getElementById('ai-input').value=el.textContent;document.getElementById('ai-input').focus()}
+document.getElementById('ai-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')askAI()});
+
+// ====== TABLE SORT ======
+let sortDir = {};
+function sortTable(col) {
+  const tbody = document.querySelector('.data-table tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const dir = (sortDir[col] = !(sortDir[col] || false));
+  rows.sort((a, b) => {
+    const va = a.cells[col].textContent.trim();
+    const vb = b.cells[col].textContent.trim();
+    const na = parseFloat(va.replace(/[^0-9,\-]/g,'').replace(',','.'));
+    const nb = parseFloat(vb.replace(/[^0-9,\-]/g,'').replace(',','.'));
+    if (!isNaN(na) && !isNaN(nb)) return dir ? na - nb : nb - na;
+    return dir ? va.localeCompare(vb, currentLang) : vb.localeCompare(va, currentLang);
+  });
+  rows.forEach(r => tbody.appendChild(r));
+}
+document.querySelectorAll('.data-table th').forEach((th, i) => {
+  th.style.cursor = 'pointer';
+  th.addEventListener('click', () => sortTable(i));
+});
+
+// ====== CHECKLIST TOGGLE ======
+document.querySelectorAll('.check-item').forEach(item => {
+  item.addEventListener('click', () => {
+    item.classList.toggle('done');
+    const done = document.querySelectorAll('.check-item.done').length;
+    const total = document.querySelectorAll('.check-item').length;
+    const pct = Math.round(done/total*100);
+    document.querySelector('.progress-bar-fill').style.width = pct + '%';
+    document.querySelector('.progress-label .text-mono').textContent = pct + '%';
+  });
+});
+
+// ====== KPI CLICK ======
+document.querySelectorAll('.kpi-card').forEach((card, i) => {
+  card.addEventListener('click', () => {
+    const titles = ['Chiffre d\'Affaires','Résultat Net','TVA à déclarer','Lettrage'];
+    const details = [
+      'CA 2024 cumulé : 2 847 500 € (+8.4% vs N-1)',
+      'Résultat net après IS : 418 340 € (marge 14.7%)',
+      'TVA CA3 due au 15/01/2025 : 569 500 €',
+      'Taux de lettrage : 847/930 écritures (91.1%)'
+    ];
+    const msgs = {
+      fr:['Chiffre d\'Affaires','Résultat Net','TVA à déclarer','Lettrage'],
+      en:['Revenue','Net Income','VAT to file','Reconciliation'],
+      es:['Facturación','Resultado Neto','IVA a declarar','Conciliación'],
+      ar:['رقم الأعمال','صافي الربح','ضريبة القيمة المضافة','المطابقة']
+    };
+    const t = msgs[currentLang] || msgs.fr;
+    alert(`📊 ${t[i]}\n${details[i]}`);
+  });
+});
+
+// ====== NOTIFICATION BADGE COUNT ======
+let notifCount = 3;
+function updateNotifBadge() {
+  const dot = document.querySelector('.notif-dot');
+  if (notifCount > 0) {
+    dot.style.display = 'block';
+    dot.textContent = '';
+  } else {
+    dot.style.display = 'none';
+  }
+}
+document.querySelector('.notif-mark-all')?.addEventListener('click', () => {
+  notifCount = 0;
+  document.querySelectorAll('.notif-item.unread').forEach(i => i.classList.remove('unread'));
+  updateNotifBadge();
+});
+
+// ====== DEMO BADGE ======
+const demoBadge = document.createElement('div');
+demoBadge.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:9999;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:var(--font-data);letter-spacing:0.5px;cursor:pointer;opacity:0.85';
+demoBadge.textContent = '⚡ MODE DÉMO';
+demoBadge.setAttribute('data-tip', 'Données simulées — cliquez partout pour tester');
+document.body.appendChild(demoBadge);
+
+// ====== NAVIGATION (shows different sections) ======
+const views = {
+  dashboard: document.querySelector('.main-content'),
+  saisie: null,
+  clotures: null,
+  etats: null,
+  fiscalite: null,
+  ged: null,
+  veille: null,
+};
+
+const SECTION_HTML = {
+  saisie: `
+<div class="dual-panel">
+  <div class="card">
+    <div class="card-header"><div class="card-title">📄 Import de Factures</div><div class="card-badge">OCR Actif</div></div>
+    <div style="padding:30px 20px;text-align:center">
+      <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:50px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition)" id="dropzone" onclick="simulateOCR()" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <svg width="36" height="36" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.2"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg>
+        <p style="margin-top:14px;color:var(--text-secondary);font-size:13px">Déposez vos fichiers ici (PDF, JPG, PNG)</p>
+        <p style="color:var(--text-muted);font-size:11px;margin-top:4px">12 factures en attente de traitement</p>
+      </div>
+    </div>
+    <div style="padding:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
+      <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FAC-2025-0847.pdf</span>
+      <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FAC-2025-0839.jpg</span>
+      <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FACTURE_MARTIN.pdf</span>
+      <span style="background:var(--accent-glow);border:1px solid var(--accent);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);cursor:pointer" onclick="simulateOCR()">+ Analyser tout</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">🔍 Résultat OCR</div><div class="card-badge" id="ocr-status">En attente</div></div>
+    <div id="ocr-result" style="padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px">
+      Cliquez sur la zone de dépôt<br>pour simuler une analyse OCR
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><div class="card-title">📋 Écritures suggérées</div><button class="card-action" onclick="alert('✅ 3 écritures créées en simulation')">Valider tout</button></div>
+  <div class="data-table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Libellé</th><th>Compte</th><th>Débit (€)</th><th>Crédit (€)</th><th>Confiance</th></tr></thead><tbody id="ocr-entries">
+    <tr><td class="mono">12/01/25</td><td>Fournitures bureau</td><td class="mono">601100</td><td class="mono text-red">1 250,00</td><td class="mono">—</td><td><span class="status-pill validated">98%</span></td></tr>
+    <tr><td class="mono">12/01/25</td><td>TVA déductible</td><td class="mono">445660</td><td class="mono text-red">250,00</td><td class="mono">—</td><td><span class="status-pill validated">97%</span></td></tr>
+    <tr><td class="mono">11/01/25</td><td>Virement client Martin</td><td class="mono">411000</td><td class="mono">—</td><td class="mono text-green">4 800,00</td><td><span class="status-pill processing">85%</span></td></tr>
+  </tbody></table></div>
+</div>`,
+  clotures: `
+<div class="dual-panel">
+  <div class="card">
+    <div class="card-header"><div class="card-title">🔒 Travaux de Clôture 2024</div><span class="card-badge" id="cloture-pct">62%</span></div>
+    <div class="progress-bar-wrap" style="padding:16px 20px 8px">
+      <div class="progress-bar-track"><div class="progress-bar-fill" style="width:62%" id="cloture-bar"></div></div>
+      <div class="progress-label"><span>Avancement</span><span class="text-mono" style="color:var(--accent)" id="cloture-label">62%</span></div>
+    </div>
+    <div class="checklist" id="cloture-checklist">
+      <div class="check-item done"><div class="check-box">✓</div><span class="check-label">Rapprochement bancaire</span></div>
+      <div class="check-item done"><div class="check-box">✓</div><span class="check-label">Lettrage comptes tiers</span></div>
+      <div class="check-item done"><div class="check-box">✓</div><span class="check-label">Calcul amortissements</span></div>
+      <div class="check-item"><div class="check-box"></div><span class="check-label">Dotations aux provisions</span></div>
+      <div class="check-item"><div class="check-box"></div><span class="check-label">Valorisation des stocks</span></div>
+      <div class="check-item"><div class="check-box"></div><span class="check-label">Édition du bilan</span></div>
+    </div>
+    <div style="padding:0 20px 16px;display:flex;gap:8px">
+      <button style="padding:8px 16px;background:var(--accent);color:white;border:none;border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-ui);font-weight:600;font-size:12px" onclick="alert('📥 Export FEC généré avec succès (simulation)')">📥 Exporter FEC</button>
+      <button style="padding:8px 16px;background:var(--bg-input);color:var(--text-secondary);border:1px solid var(--border);border-radius:var(--radius-md);cursor:pointer;font-family:var(--font-ui);font-weight:500;font-size:12px" onclick="alert('📄 Bilan pré-clôture généré (simulation)')">📄 Bilan provisoire</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">⚖️ Balance de Vérification</div></div>
+    <div style="padding:16px 20px">
+      <div style="display:grid;gap:8px">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--font-data);font-size:12px"><span>Total Débit</span><span style="color:var(--green)">1 284 500,00 €</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--font-data);font-size:12px"><span>Total Crédit</span><span style="color:var(--green)">1 284 500,00 €</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-family:var(--font-data);font-size:12px"><span>Écart</span><span style="color:var(--green)">0,00 € ✓</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-family:var(--font-data);font-size:12px"><span>Nombre d'écritures</span><span style="color:var(--text-primary)">1 284</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="bottom-grid" style="grid-template-columns:1fr 1fr">
+  <div class="card">
+    <div class="card-header"><div class="card-title">📆 Échéances fiscales</div></div>
+    <div class="alerts-list">
+      <div class="alert-item"><div class="alert-dot red"></div><div class="alert-body"><div class="alert-title">TVA CA3</div><div class="alert-desc">Déclaration mensuelle — 569 500 €</div></div><div class="alert-date urgent">15 Jan</div></div>
+      <div class="alert-item"><div class="alert-dot amber"></div><div class="alert-body"><div class="alert-title">Acompte IS</div><div class="alert-desc">4ème échéance — 35 593 €</div></div><div class="alert-date">15 Déc</div></div>
+      <div class="alert-item"><div class="alert-dot amber"></div><div class="alert-body"><div class="alert-title">CVAE 2024</div><div class="alert-desc">Formulaire 1329-DEF</div></div><div class="alert-date">2 Mai</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">📊 Ratios de clôture</div></div>
+    <div style="padding:16px 20px;display:grid;gap:10px">
+      <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>Fonds de roulement</span><span class="text-mono" style="color:var(--green)}">347 200 €</span></div><div style="background:var(--bg-input);height:4px;border-radius:2px"><div style="width:74%;height:100%;background:var(--green);border-radius:2px"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>Ratio d'endettement</span><span class="text-mono" style="color:var(--amber)">42%</span></div><div style="background:var(--bg-input);height:4px;border-radius:2px"><div style="width:42%;height:100%;background:var(--amber);border-radius:2px"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>BFR</span><span class="text-mono" style="color:var(--accent)">128 400 €</span></div><div style="background:var(--bg-input);height:4px;border-radius:2px"><div style="width:58%;height:100%;background:var(--accent);border-radius:2px"></div></div></div>
+    </div>
+  </div>
+</div>`,
+  etats: `
+<div class="dual-panel">
+  <div class="card">
+    <div class="card-header"><div class="card-title">📊 États Financiers 2024</div><button class="card-action" onclick="alert('📄 Export PDF combiné (simulation)')">📥 Tout exporter</button></div>
+    <div style="padding:16px 20px;display:grid;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="openModal('Bilan Actif/Passif',bilanData)">
+        <span style="font-size:13px;color:var(--text-secondary)">📋 Bilan Actif / Passif</span>
+        <div style="display:flex;gap:4px"><span style="font-size:10px;color:var(--text-muted)">1 284 500 €</span><span style="color:var(--accent)">→</span></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="openModal('Compte de Résultat',crData)">
+        <span style="font-size:13px;color:var(--text-secondary)">📈 Compte de Résultat</span>
+        <div style="display:flex;gap:4px"><span style="font-size:10px;color:var(--text-muted)">418 340 €</span><span style="color:var(--accent)">→</span></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="openModal('Annexe aux Comptes',annexeData)">
+        <span style="font-size:13px;color:var(--text-secondary)">📝 Annexe</span>
+        <span style="color:var(--accent)">→</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="alert('📄 Télétransmission DGFiP simulée')">
+        <span style="font-size:13px;color:var(--text-secondary)">🏛️ Liasse Fiscale 2024</span>
+        <div style="display:flex;gap:4px"><span class="status-pill validated">À jour</span><span style="color:var(--accent)">→</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title">📌 Détails</div></div>
+    <div id="etat-detail" style="padding:30px 20px;text-align:center;color:var(--text-muted);font-size:13px">
+      Cliquez sur un état financier<br>pour voir les détails
+    </div>
+  </div>
+</div>`,
+  fiscalite: `
+<div class="kpi-grid" style="grid-template-columns:repeat(4,1fr)">
+  <div class="kpi-card c-blue"><div class="kpi-header"><div class="kpi-icon-wrap blue">🏛️</div></div><div><div class="kpi-value">25%</div><div class="kpi-label">Taux IS normal</div><div class="kpi-sub">Art. 219 CGI</div></div></div>
+  <div class="kpi-card c-green"><div class="kpi-header"><div class="kpi-icon-wrap green">📊</div></div><div><div class="kpi-value">20%</div><div class="kpi-label">TVA normale</div><div class="kpi-sub">Taux standard</div></div></div>
+  <div class="kpi-card c-amber"><div class="kpi-header"><div class="kpi-icon-wrap amber">💰</div></div><div><div class="kpi-value">1.5%</div><div class="kpi-label">CVAE</div><div class="kpi-sub">Taux max</div></div></div>
+  <div class="kpi-card c-purple"><div class="kpi-header"><div class="kpi-icon-wrap purple">📅</div></div><div><div class="kpi-value">15%</div><div class="kpi-label">IS réduit</div><div class="kpi-sub">PME ≤ 42 622 €</div></div></div>
+</div>
+<div class="dual-panel">
+  <div class="card"><div class="card-header"><div class="card-title">📆 Calendrier Fiscal</div></div><div class="alerts-list">
+    <div class="alert-item"><div class="alert-dot red"></div><div class="alert-body"><div class="alert-title">TVA CA3 — Mensuelle</div><div class="alert-desc">Déclaration + paiement</div></div><div class="alert-date urgent">15 Jan</div></div>
+    <div class="alert-item"><div class="alert-dot amber"></div><div class="alert-body"><div class="alert-title">IS — Acompte n°4</div><div class="alert-desc">35 593 €</div></div><div class="alert-date">15 Déc</div></div>
+    <div class="alert-item"><div class="alert-dot blue"></div><div class="alert-body"><div class="alert-title">CVAE 2024</div><div class="alert-desc">Formulaire 1329-DEF</div></div><div class="alert-date">2 Mai</div></div>
+    <div class="alert-item"><div class="alert-dot green"></div><div class="alert-body"><div class="alert-title">CFE</div><div class="alert-desc">Cotisation Foncière</div></div><div class="alert-date">15 Déc</div></div>
+  </div></div>
+  <div class="card"><div class="card-header"><div class="card-title">🧮 Simulateur IS</div></div><div style="padding:20px">
+    <div style="margin-bottom:12px"><label style="font-size:11px;color:var(--text-muted)">Résultat fiscal estimé (€)</label><input type="text" value="418 340" style="width:100%;margin-top:6px;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-data);font-size:13px" id="sim-input" oninput="calcIS()"></div>
+    <div style="display:grid;gap:6px;font-size:12px;font-family:var(--font-data)" id="sim-result">
+      <div style="display:flex;justify-content:space-between"><span>IS à 15%</span><span style="color:var(--text-primary)">6 393 €</span></div>
+      <div style="display:flex;justify-content:space-between"><span>IS à 25%</span><span style="color:var(--text-primary)">93 930 €</span></div>
+      <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border);color:var(--green);font-weight:600"><span>Total IS</span><span>100 323 €</span></div>
+    </div>
+  </div></div>
+</div>`,
+  ged: `
+<div class="dual-panel">
+  <div class="card"><div class="card-header"><div class="card-title">📁 Portail GED Clients</div><button class="card-action" onclick="alert('📧 Invitation envoyée aux clients (simulation)')">+ Inviter</button></div>
+    <div style="padding:8px 12px"><input type="text" placeholder="🔍 Rechercher un dossier..." style="width:100%;padding:8px 12px;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-primary);font-family:var(--font-ui);font-size:12px" oninput="filterClients(this.value)"></div>
+    <div style="padding:0 12px 12px;display:grid;gap:6px" id="client-list">
+      <div class="client-card" data-name="Dupont" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="alert('📂 SARL Dupont — 5 documents (simulation)')"><div><div style="font-size:13px;color:var(--text-primary);font-weight:500">SARL Dupont</div><div style="font-size:11px;color:var(--text-muted)">3-5 rue de Paris · 75001 Paris</div></div><div style="display:flex;align-items:center;gap:8px"><span class="status-pill validated">5 docs</span><span style="color:var(--accent)">→</span></div></div>
+      <div class="client-card" data-name="Martin" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="alert('📂 Martin SARL — 2 documents (simulation)')"><div><div style="font-size:13px;color:var(--text-primary);font-weight:500">Martin SARL</div><div style="font-size:11px;color:var(--text-muted)">8 avenue Victor Hugo · 69002 Lyon</div></div><div style="display:flex;align-items:center;gap:8px"><span class="status-pill pending">2 docs</span><span style="color:var(--accent)">→</span></div></div>
+      <div class="client-card" data-name="Petit" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="alert('📂 Petit & Fils — 12 documents (simulation)')"><div><div style="font-size:13px;color:var(--text-primary);font-weight:500">Petit & Fils</div><div style="font-size:11px;color:var(--text-muted)">12 rue de la Paix · 75002 Paris</div></div><div style="display:flex;align-items:center;gap:8px"><span class="status-pill processing">12 docs</span><span style="color:var(--accent)">→</span></div></div>
+      <div class="client-card" data-name="Dupuis" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md);cursor:pointer" onclick="alert('📂 Dupuis SAS — 0 document (simulation)')"><div><div style="font-size:13px;color:var(--text-primary);font-weight:500">Dupuis SAS</div><div style="font-size:11px;color:var(--text-muted)">45 boulevard Saint-Germain · 75005 Paris</div></div><div style="display:flex;align-items:center;gap:8px"><span class="status-pill overdue">0 doc</span><span style="color:var(--accent)">→</span></div></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">📊 Statistiques GED</div></div><div style="padding:20px;display:grid;gap:16px">
+    <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span>Documents total</span><span class="text-mono" style="color:var(--text-primary)">247</span></div><div style="background:var(--bg-input);height:4px;border-radius:2px"><div style="width:100%;height:100%;background:var(--accent);border-radius:2px"></div></div></div>
+    <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span>Traités</span><span class="text-mono" style="color:var(--green)">198</span></div><div style="background:var(--bg-input);height:4px;border-radius:2px"><div style="width:80%;height:100%;background:var(--green);border-radius:2px"></div></div></div>
+    <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span>En attente</span><span class="text-mono" style="color:var(--amber)">49</span></div><div style="background:var(--bg-input);height:4px;border-radius:2px"><div style="width:20%;height:100%;background:var(--amber);border-radius:2px"></div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+      <div style="text-align:center;padding:12px;background:var(--bg-input);border-radius:var(--radius-md)"><div class="text-mono" style="font-size:18px;color:var(--text-primary)">4</div><div style="font-size:10px;color:var(--text-muted)">Clients</div></div>
+      <div style="text-align:center;padding:12px;background:var(--bg-input);border-radius:var(--radius-md)"><div class="text-mono" style="font-size:18px;color:var(--text-primary)">19</div><div style="font-size:10px;color:var(--text-muted)">Factures</div></div>
+      <div style="text-align:center;padding:12px;background:var(--bg-input);border-radius:var(--radius-md)"><div class="text-mono" style="font-size:18px;color:var(--text-primary)">228</div><div style="font-size:10px;color:var(--text-muted)">Docs</div></div>
+    </div>
+  </div></div>
+</div>`,
+  veille: `
+<div class="dual-panel">
+  <div class="card"><div class="card-header"><div class="card-title">📰 Veille Juridique & Réglementaire</div><div class="card-badge">3 nouveaux</div></div>
+    <div style="padding:16px 20px;display:grid;gap:10px">
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--accent);cursor:pointer" onclick="alert('📄 BOFIP détail (simulation)')">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">BOI-IS-DEC-20</span><span style="font-size:10px;color:var(--text-muted)">12 Jan 2025</span></div>
+        <div style="font-size:12px;color:var(--text-secondary)">Taux IS 2025 confirmé à 25% — Pas de changement pour les exercices clos à compter du 31/12/2024</div>
+        <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--accent-glow);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:10px">IS</span><span style="background:var(--green-dim);color:var(--green);padding:2px 8px;border-radius:10px;font-size:10px">Conformité</span></div>
+      </div>
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--green);cursor:pointer" onclick="alert('📄 BOI TVA détail (simulation)')">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">BOI-TVA-DEC-30</span><span style="font-size:10px;color:var(--text-muted)">8 Jan 2025</span></div>
+        <div style="font-size:12px;color:var(--text-secondary)">Franchise en base de TVA relevée à 91 900 € pour les prestations de services à compter du 01/01/2025</div>
+        <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--amber-dim);color:var(--amber);padding:2px 8px;border-radius:10px;font-size:10px">TVA</span><span style="background:var(--green-dim);color:var(--green);padding:2px 8px;border-radius:10px;font-size:10px">Franchise</span></div>
+      </div>
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--amber);cursor:pointer" onclick="alert('📄 C. com. détail (simulation)')">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">C. com. art. L123-12</span><span style="font-size:10px;color:var(--text-muted)">5 Jan 2025</span></div>
+        <div style="font-size:12px;color:var(--text-secondary)">Délai de transmission du FEC allongé à 30 jours ouvrés (au lieu de 15) en cas de contrôle DGFiP</div>
+        <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--purple-dim);color:var(--purple);padding:2px 8px;border-radius:10px;font-size:10px">FEC</span><span style="background:var(--red-dim);color:var(--red);padding:2px 8px;border-radius:10px;font-size:10px">Urgent</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card"><div class="card-header"><div class="card-title">📌 Dernières actualités</div></div>
+    <div style="padding:16px 20px">
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">📌 Loi de Finances 2025 : mesures adoptées</div>
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">📌 Barème kilométrique 2025 publié</div>
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">📌 Seuils de certification légale revalorisés</div>
+      <div style="padding:10px 0;font-size:12px;color:var(--text-secondary)">📌 Dématérialisation des factures : échéance 2026</div>
+    </div>
+  </div>
+</div>
+<div class="card" style="margin-top:14px">
+  <div class="card-header"><div class="card-title">💬 Assistant Veille</div></div>
+  <div class="ai-panel">
+    <div style="display:flex;gap:8px"><input class="ai-input" id="veille-input" type="text" placeholder="Rechercher une actualité fiscale…" /><button class="ai-send-btn" onclick="searchVeille()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2L2 7l5 3 3 5 4-13z"/></svg></button></div>
+    <div id="veille-result" style="margin-top:10px;font-size:12px;color:var(--text-muted);font-style:italic">Tapez un mot-clé (IS, TVA, FEC, CVAE…) pour trouver une actualité</div>
+  </div>
+</div>`,
+};
+
+function navigate(section, e) {
+  e.preventDefault();
+  document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+  e.currentTarget.classList.add('active');
+  const main = document.querySelector('.main-content');
+  if (section === 'dashboard') {
+    // Restore original content — simple reload
+    location.reload();
+    return;
+  }
+  const html = SECTION_HTML[section];
+  if (html) {
+    main.innerHTML = html;
+    // Re-bind events for section
+    if (section === 'clotures') {
+      document.querySelectorAll('.check-item').forEach(item => {
+        item.addEventListener('click', function() {
+          this.classList.toggle('done');
+          const done = document.querySelectorAll('#cloture-checklist .check-item.done').length;
+          const total = document.querySelectorAll('#cloture-checklist .check-item').length;
+          const pct = Math.round(done/total*100);
+          const bar = document.getElementById('cloture-bar');
+          const label = document.getElementById('cloture-label');
+          const badge = document.getElementById('cloture-pct');
+          if (bar) bar.style.width = pct + '%';
+          if (label) label.textContent = pct + '%';
+          if (badge) badge.textContent = pct + '%';
+        });
+      });
+    }
+    if (section === 'fiscalite') calcIS();
+  }
+  // Update header title
+  const titles = {saisie:'Saisie & OCR',clotures:'Clôture Annuelle',etats:'États Financiers',fiscalite:'Fiscalité',ged:'Portail GED',veille:'Veille Juridique'};
+  const cabinetName = document.getElementById('header-name')?.textContent || 'Cabinet';
+  const ht = document.querySelector('.header-title');
+  if (ht) ht.innerHTML = `<span class="logo-icon" style="width:28px;height:28px;font-size:13px;display:inline-flex;margin-inline-end:10px">CE</span><div><span style="font-size:15px;font-weight:600;color:var(--text-primary)">${titles[section]||'Dashboard'}</span><span style="font-size:12px;font-weight:400;color:var(--text-muted);display:block;margin-top:1px">${cabinetName} · Mode démo</span></div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ====== SIMULATE OCR ======
+function simulateOCR() {
+  const status = document.getElementById('ocr-status');
+  const result = document.getElementById('ocr-result');
+  status.textContent = 'Analyse en cours…';
+  status.style.background = 'var(--amber-dim)';
+  status.style.color = 'var(--amber)';
+  result.innerHTML = '<span style="color:var(--text-muted);font-style:italic">⟳ Reconnaissance en cours…</span>';
+  setTimeout(() => {
+    status.textContent = 'Terminé';
+    status.style.background = 'var(--green-dim)';
+    status.style.color = 'var(--green)';
+    result.innerHTML = `
+      <div style="text-align:left">
+        <div style="display:grid;gap:10px">
+          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Fournisseur</span><div style="color:var(--text-primary);font-weight:500">SARL Dupont</div></div>
+          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Montant TTC</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">1 500,00 €</div></div>
+          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">TVA</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">250,00 € (20%)</div></div>
+          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Compte suggéré</span><div><span style="color:var(--accent);font-weight:600;font-family:var(--font-data)">601100</span> <span style="color:var(--text-secondary)">— Achats matières</span></div></div>
+        </div>
+      </div>`;
+  }, 1500);
+}
+
+// ====== ÉTATS FINANCIERS MODAL ======
+const bilanData = {actif:[['Immobilisations',624500],['Stocks',128400],['Créances',347200],['Trésorerie',184400]],passif:[['Capitaux propres',847300],['Dettes financières',215400],['Dettes fournisseurs',168400],['Dettes fiscales',53400]]};
+const crData = {charges:[['Achats',847200],['Salaires',562100],['Amortissements',38900],['Frais généraux',284500]],produits:[['Ventes',2847500],['Autres produits',128400]]};
+const annexeData = ['Règles et méthodes comptables','Faits marquants de l\'exercice','Notes sur le bilan','Notes sur le compte de résultat'];
+
+function openModal(title, data) {
+  const detail = document.getElementById('etat-detail');
+  if (data.actif) {
+    const totalActif = data.actif.reduce((s,i) => s + i[1], 0);
+    const totalPassif = data.passif.reduce((s,i) => s + i[1], 0);
+    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:6px">ACTIF</div>${data.actif.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Actif</span><span class="text-mono">${totalActif.toLocaleString('fr-FR')} €</span></div></div>
+        <div><div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:6px">PASSIF</div>${data.passif.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Passif</span><span class="text-mono">${totalPassif.toLocaleString('fr-FR')} €</span></div></div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:${totalActif === totalPassif ? 'var(--green-dim)' : 'var(--red-dim)'};border-radius:var(--radius-md);text-align:center;font-size:12px;font-weight:600;color:${totalActif === totalPassif ? 'var(--green)' : 'var(--red)'}">${totalActif === totalPassif ? '✓ Bilan équilibré' : '⚠ Différence de ' + Math.abs(totalActif - totalPassif).toLocaleString('fr-FR') + ' €'}</div></div>`;
+  } else if (data.charges) {
+    const totalCharges = data.charges.reduce((s,i) => s + i[1], 0);
+    const totalProduits = data.produits.reduce((s,i) => s + i[1], 0);
+    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:6px">CHARGES</div>${data.charges.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Charges</span><span class="text-mono">${totalCharges.toLocaleString('fr-FR')} €</span></div></div>
+        <div><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:6px">PRODUITS</div>${data.produits.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Produits</span><span class="text-mono">${totalProduits.toLocaleString('fr-FR')} €</span></div></div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:var(--accent-glow);border-radius:var(--radius-md);text-align:center;font-size:12px;font-weight:600;color:var(--accent)">Résultat : ${(totalProduits - totalCharges).toLocaleString('fr-FR')} €</div></div>`;
+  } else if (Array.isArray(data)) {
+    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>${data.map(i => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">• ${i}</div>`).join('')}</div>`;
+  }
+}
+
+// ====== FISCALITÉ SIMULATEUR ======
+function calcIS() {
+  const input = document.getElementById('sim-input');
+  if (!input) return;
+  const v = parseFloat(input.value.replace(/[^0-9,\-]/g,'').replace(',','.')) || 0;
+  const r15 = Math.min(v, 42622) * 0.15;
+  const r25 = Math.max(0, v - 42622) * 0.25;
+  document.getElementById('sim-result').innerHTML = `
+    <div style="display:flex;justify-content:space-between"><span>IS à 15%</span><span style="color:var(--text-primary)">${r15.toLocaleString('fr-FR',{minimumFractionDigits:0})} €</span></div>
+    <div style="display:flex;justify-content:space-between"><span>IS à 25%</span><span style="color:var(--text-primary)">${r25.toLocaleString('fr-FR',{minimumFractionDigits:0})} €</span></div>
+    <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border);color:var(--green);font-weight:600"><span>Total IS</span><span>${(r15+r25).toLocaleString('fr-FR',{minimumFractionDigits:0})} €</span></div>`;
+}
+
+// ====== GED FILTER ======
+function filterClients(q) {
+  document.querySelectorAll('.client-card').forEach(c => {
+    c.style.display = c.getAttribute('data-name').toLowerCase().includes(q.toLowerCase()) ? 'flex' : 'none';
+  });
+}
+
+// ====== VEILLE SEARCH ======
+function searchVeille() {
+  const q = document.getElementById('veille-input')?.value?.toLowerCase() || '';
+  const result = document.getElementById('veille-result');
+  const map = {is:'Taux IS 2025 confirmé à 25% — BOFIP BOI-IS-DEC-20',tva:'Franchise TVA relevée à 91 900 € — BOI-TVA-DEC-30',fec:'Délai FEC allongé à 30 jours — C. com. L123-12',cvae:'Échéance CVAE 2024 au 2 mai 2025'};
+  const found = Object.entries(map).find(([k]) => q.includes(k));
+  result.innerHTML = found ? `<span style="color:var(--text-secondary)">📌 ${found[1]}</span>` : '<span style="color:var(--text-muted);font-style:italic">Aucun résultat. Essayez : IS, TVA, FEC, CVAE</span>';
+}
+document.getElementById('veille-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') searchVeille(); });
+
+// ====== RENAME CABINET ======
+function renameCabinet() {
+  const el = document.getElementById('header-name');
+  const current = el.textContent;
+  const name = prompt('Nom du cabinet :', current);
+  if (name && name.trim()) el.textContent = name.trim();
+}
+
+// ====== KPI TICKER ======
+function animateKPI(){
+  let v=2847500;
+  setInterval(()=>{v+=Math.floor((Math.random()-0.3)*500);const el=document.getElementById('kpi-ca');if(el)el.textContent=v.toLocaleString('fr-FR')},4000)
+}
+
+// ====== INIT ======
+applyLang('fr');
+animateKPI();
+</script>
+</body>
+</html>
