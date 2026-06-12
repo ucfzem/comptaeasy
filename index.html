@@ -52,7 +52,7 @@ body.light {
   --text-muted:     #8B9CC4;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; scroll-behavior: smooth; scrollbar-gutter: stable; }
+html { font-size: 14px; scroll-behavior: smooth; scroll-padding-top: env(safe-area-inset-top, 8px); scrollbar-gutter: stable; }
 body {
   background: var(--bg-base);
   color: var(--text-primary);
@@ -91,7 +91,8 @@ html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
   align-items: center;
   gap: 10px;
   padding: 0 20px;
-  height: var(--header-h);
+  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
   border-block-end: 1px solid var(--border);
 }
 .logo-icon {
@@ -192,6 +193,8 @@ html[dir="rtl"] .nav-item.active::before {
   display: flex;
   align-items: center;
   padding: 0 24px;
+  padding-top: env(safe-area-inset-top, 0px);
+  min-height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
   gap: 16px;
   position: sticky;
   top: 0;
@@ -1132,17 +1135,17 @@ const SECTION_HTML = {
 <div class="dual-panel">
   <div class="card"><div class="card-header"><div class="card-title">📰 Veille Juridique & Réglementaire</div><div class="card-badge">3 nouveaux</div></div>
     <div style="padding:16px 20px;display:grid;gap:10px">
-      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--accent);cursor:pointer" onclick="alert('📄 BOFIP détail (simulation)')">
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-inline-start:3px solid var(--accent);cursor:pointer" onclick="alert('📄 BOFIP détail (simulation)')">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">BOI-IS-DEC-20</span><span style="font-size:10px;color:var(--text-muted)">12 Jan 2025</span></div>
         <div style="font-size:12px;color:var(--text-secondary)">Taux IS 2025 confirmé à 25% — Pas de changement pour les exercices clos à compter du 31/12/2026</div>
         <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--accent-glow);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:10px">IS</span><span style="background:var(--green-dim);color:var(--green);padding:2px 8px;border-radius:10px;font-size:10px">Conformité</span></div>
       </div>
-      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--green);cursor:pointer" onclick="alert('📄 BOI TVA détail (simulation)')">
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-inline-start:3px solid var(--green);cursor:pointer" onclick="alert('📄 BOI TVA détail (simulation)')">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">BOI-TVA-DEC-30</span><span style="font-size:10px;color:var(--text-muted)">8 Jan 2025</span></div>
         <div style="font-size:12px;color:var(--text-secondary)">Franchise en base de TVA relevée à 91 900 € pour les prestations de services à compter du 01/01/2025</div>
         <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--amber-dim);color:var(--amber);padding:2px 8px;border-radius:10px;font-size:10px">TVA</span><span style="background:var(--green-dim);color:var(--green);padding:2px 8px;border-radius:10px;font-size:10px">Franchise</span></div>
       </div>
-      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--amber);cursor:pointer" onclick="alert('📄 C. com. détail (simulation)')">
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-inline-start:3px solid var(--amber);cursor:pointer" onclick="alert('📄 C. com. détail (simulation)')">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">C. com. art. L123-12</span><span style="font-size:10px;color:var(--text-muted)">5 Jan 2025</span></div>
         <div style="font-size:12px;color:var(--text-secondary)">Délai de transmission du FEC allongé à 30 jours ouvrés (au lieu de 15) en cas de contrôle DGFiP</div>
         <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--purple-dim);color:var(--purple);padding:2px 8px;border-radius:10px;font-size:10px">FEC</span><span style="background:var(--red-dim);color:var(--red);padding:2px 8px;border-radius:10px;font-size:10px">Urgent</span></div>
@@ -1220,7 +1223,7 @@ function simulateOCR() {
     status.style.background = 'var(--green-dim)';
     status.style.color = 'var(--green)';
     result.innerHTML = `
-      <div style="text-align:left">
+      <div style="text-align:start">
         <div style="display:grid;gap:10px">
           <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Fournisseur</span><div style="color:var(--text-primary);font-weight:500">SARL Dupont</div></div>
           <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Montant TTC</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">1 500,00 €</div></div>
@@ -1241,7 +1244,7 @@ function openModal(title, data) {
   if (data.actif) {
     const totalActif = data.actif.reduce((s,i) => s + i[1], 0);
     const totalPassif = data.passif.reduce((s,i) => s + i[1], 0);
-    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
+    detail.innerHTML = `<div style="text-align:start"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:6px">ACTIF</div>${data.actif.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Actif</span><span class="text-mono">${totalActif.toLocaleString('fr-FR')} €</span></div></div>
         <div><div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:6px">PASSIF</div>${data.passif.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Passif</span><span class="text-mono">${totalPassif.toLocaleString('fr-FR')} €</span></div></div>
@@ -1250,14 +1253,14 @@ function openModal(title, data) {
   } else if (data.charges) {
     const totalCharges = data.charges.reduce((s,i) => s + i[1], 0);
     const totalProduits = data.produits.reduce((s,i) => s + i[1], 0);
-    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
+    detail.innerHTML = `<div style="text-align:start"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:6px">CHARGES</div>${data.charges.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Charges</span><span class="text-mono">${totalCharges.toLocaleString('fr-FR')} €</span></div></div>
         <div><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:6px">PRODUITS</div>${data.produits.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Produits</span><span class="text-mono">${totalProduits.toLocaleString('fr-FR')} €</span></div></div>
       </div>
       <div style="margin-top:12px;padding:10px;background:var(--accent-glow);border-radius:var(--radius-md);text-align:center;font-size:12px;font-weight:600;color:var(--accent)">Résultat : ${(totalProduits - totalCharges).toLocaleString('fr-FR')} €</div></div>`;
   } else if (Array.isArray(data)) {
-    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>${data.map(i => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">• ${i}</div>`).join('')}</div>`;
+    detail.innerHTML = `<div style="text-align:start"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>${data.map(i => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">• ${i}</div>`).join('')}</div>`;
   }
 }
 
