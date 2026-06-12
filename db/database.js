@@ -11,7 +11,9 @@ let SQL;
 
 export async function getDb() {
   if (db) return db;
-  SQL = await initSqlJs();
+  SQL = await initSqlJs({
+    locateFile: file => path.join(process.cwd(), 'node_modules', 'sql.js', 'dist', file)
+  });
   if (fs.existsSync(DB_PATH)) {
     const buf = fs.readFileSync(DB_PATH);
     db = new SQL.Database(buf);
