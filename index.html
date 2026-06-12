@@ -955,12 +955,32 @@ document.querySelector('.notif-mark-all')?.addEventListener('click', () => {
   updateNotifBadge();
 });
 
-// ====== DEMO BADGE ======
-const demoBadge = document.createElement('div');
-demoBadge.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:9999;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:var(--font-data);letter-spacing:0.5px;cursor:pointer;opacity:0.85';
-demoBadge.textContent = '⚡ MODE DÉMO';
-demoBadge.setAttribute('data-tip', 'Données simulées — cliquez partout pour tester');
-document.body.appendChild(demoBadge);
+// ====== LIVE/DEMO TOGGLE ======
+let liveMode = true;
+const mainContent = document.querySelector('.main-content');
+const demoHTML = mainContent ? mainContent.innerHTML : '';
+const modeBadge = document.createElement('div');
+modeBadge.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:9999;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:var(--font-data);letter-spacing:0.5px;cursor:pointer;opacity:0.85';
+modeBadge.textContent = '🌐 MODE LIVE';
+modeBadge.setAttribute('data-tip', 'Cliquer pour basculer entre données live et démo');
+document.body.appendChild(modeBadge);
+modeBadge.onclick = function(){
+  liveMode = !liveMode;
+  const aiStatus = document.getElementById('ai-status-label');
+  const main = document.querySelector('.main-content');
+  if(liveMode){
+    modeBadge.textContent = '⟳ CHARGEMENT…';
+    if(aiStatus) aiStatus.textContent = '⟳ Connexion…';
+    window.CE.loadDashboard().then(r => {
+      modeBadge.textContent = r ? '🌐 MODE LIVE' : '⚡ MODE DÉMO';
+      if(aiStatus) aiStatus.textContent = r ? 'Connecté — Gemini' : 'Mode local';
+    });
+  }else{
+    modeBadge.textContent = '⚡ MODE DÉMO';
+    if(aiStatus) aiStatus.textContent = 'Mode local';
+    if(demoHTML && main) main.innerHTML = demoHTML;
+  }
+};
 
 // ====== NAVIGATION (shows different sections) ======
 const views = {
@@ -1178,8 +1198,10 @@ function navigate(section, e) {
   e.currentTarget.classList.add('active');
   const main = document.querySelector('.main-content');
   if (section === 'dashboard') {
-    // Restore original content — simple reload
-    location.reload();
+    if(demoHTML) main.innerHTML = demoHTML;
+    else location.reload();
+    if(typeof applyLang === 'function') applyLang(currentLang);
+    if(liveMode) window.CE.loadDashboard();
     return;
   }
   const html = SECTION_HTML[section];
@@ -1321,10 +1343,12 @@ animateKPI();
 (function(){
   const el=document.getElementById('ai-status-label');
   const API=window.COMPTAEASY_API||'';
-  if(!API){if(el)el.textContent='Mode local';return}
+  if(modeBadge) modeBadge.textContent = liveMode ? '🌐 MODE LIVE' : '⚡ MODE DÉMO';
+  if(!API){if(el)el.textContent='Mode local';if(modeBadge)modeBadge.textContent='⚡ MODE DÉMO';return}
   fetch(API+'/api/dashboard',{signal:AbortSignal.timeout(5000)}).then(r=>{
     if(el)el.textContent=r.ok?'Connecté — Gemini':'Mode local';
-  }).catch(()=>{if(el)el.textContent='Mode local'});
+    if(modeBadge)modeBadge.textContent=r.ok?'🌐 MODE LIVE':'⚡ MODE DÉMO';
+  }).catch(()=>{if(el)el.textContent='Mode local';if(modeBadge)modeBadge.textContent='⚡ MODE DÉMO'});
 })();
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('mobile-open');
