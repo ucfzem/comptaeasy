@@ -1,3 +1,4 @@
+import initSqlJs from 'sql.js';
 import express from 'express';
 import cors from 'cors';
 
@@ -5,7 +6,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0' }));
+app.get('/api/health', async (req, res) => {
+  try {
+    const SQL = await initSqlJs({
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/${file}`
+    });
+    const db = new SQL.Database();
+    const result = db.exec("SELECT sqlite_version() as v")[0];
+    res.json({ status: 'ok', version: '1.0.0', sqlite: result.values[0][0] });
+  } catch (e) {
+    res.status(500).json({ error: e.message, stack: e.stack?.split('\n').slice(0, 3).join('\n') });
+  }
+});
+
 app.get('*', (req, res) => res.json({ error: 'not found' }));
 
 export default app;
