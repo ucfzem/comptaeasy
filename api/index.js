@@ -1,28 +1,37 @@
-import initSqlJs from 'sql.js';
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { initSchema } from '../db/database.js';
+import dashboardRouter from '../routes/dashboard.js';
+import entriesRouter from '../routes/entries.js';
+import clientsRouter from '../routes/clients.js';
+import ocrRouter from '../routes/ocr.js';
+import fecRouter from '../routes/fec.js';
+import iaRouter from '../routes/ia.js';
+import veilleRouter from '../routes/veille.js';
+import alertesRouter from '../routes/alertes.js';
+import financeRouter from '../routes/finance.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get('/api/health', async (req, res) => {
-  try {
-    const SQL = await initSqlJs({
-      locateFile: file => path.join(__dirname, file)
-    });
-    const db = new SQL.Database();
-    const result = db.exec("SELECT sqlite_version() as v")[0];
-    res.json({ status: 'ok', version: '1.0.0', sqlite: result.values[0][0] });
-  } catch (e) {
-    res.status(500).json({ error: e.message, stack: e.stack?.split('\n').slice(0, 3).join('\n') });
+app.use('/api/dashboard', dashboardRouter);
+app.use('/api/entries', entriesRouter);
+app.use('/api/clients', clientsRouter);
+app.use('/api/ocr', ocrRouter);
+app.use('/api/fec', fecRouter);
+app.use('/api/ia', iaRouter);
+app.use('/api/veille', veilleRouter);
+app.use('/api/alertes', alertesRouter);
+app.use('/api/finance', financeRouter);
+app.get('/api/health', (req, res) => res.json({ status: 'ok', version: '1.0.0' }));
+
+let ready = false;
+
+export default async (req, res) => {
+  if (!ready) {
+    await initSchema();
+    ready = true;
   }
-});
-
-app.get('*', (req, res) => res.json({ error: 'not found' }));
-
-export default app;
+  app(req, res);
+};
