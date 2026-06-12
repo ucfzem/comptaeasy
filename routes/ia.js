@@ -38,12 +38,12 @@ router.post('/ask', async (req, res) => {
           'X-Title': 'ComptaEasy',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.0-flash-001',
+          model: 'google/gemini-2.5-flash',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: question },
           ],
-          max_tokens: 300,
+          max_tokens: 500,
           temperature: 0.3,
         }),
       });
