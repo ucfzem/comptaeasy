@@ -12,7 +12,10 @@ let SQL;
 export async function getDb() {
   if (db) return db;
   SQL = await initSqlJs({
-    locateFile: file => path.join(process.cwd(), 'api', file)
+    locateFile: file => {
+      const wasmPath = path.join(__dirname, file);
+      return wasmPath;
+    }
   });
   if (fs.existsSync(DB_PATH)) {
     const buf = fs.readFileSync(DB_PATH);
