@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="fr" dir="ltr">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>ComptaEasy — Plateforme Comptable</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -63,7 +63,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
+[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
@@ -91,8 +91,8 @@ html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
   align-items: center;
   gap: 10px;
   padding: 0 20px;
-  padding-top: env(safe-area-inset-top, 0px);
-  height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 12px);
+  height: calc(var(--header-h) + env(safe-area-inset-top, 12px));
   border-block-end: 1px solid var(--border);
 }
 .logo-icon {
@@ -147,7 +147,7 @@ html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
   background: var(--accent);
   border-radius: 0 2px 2px 0;
 }
-html[dir="rtl"] .nav-item.active::before {
+[dir="rtl"] .nav-item.active::before {
   inset-inline-start: auto;
   inset-inline-end: 0;
   border-radius: 2px 0 0 2px;
@@ -193,8 +193,8 @@ html[dir="rtl"] .nav-item.active::before {
   display: flex;
   align-items: center;
   padding: 0 24px;
-  padding-top: env(safe-area-inset-top, 0px);
-  min-height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 12px);
+  min-height: calc(var(--header-h) + env(safe-area-inset-top, 12px));
   gap: 16px;
   position: sticky;
   top: 0;
@@ -291,7 +291,7 @@ html[dir="rtl"] .nav-item.active::before {
   0%   { transform: translateX(0); }
   100% { transform: translateX(50%); }
 }
-html[dir="rtl"] .ticker-inner {
+[dir="rtl"] .ticker-inner {
   animation-name: ticker-scroll-rtl;
 }
 .ticker-item {
@@ -823,8 +823,13 @@ function applyLang(lang){
   const ai=document.getElementById('ai-response');
   if(ai&&d['ai.greeting']&&d['ai.greeting.msg'])ai.innerHTML=`<strong>${d['ai.greeting']}</strong> ${d['ai.greeting.msg']}`;
   const rtl=lang==='ar';
-  document.documentElement.setAttribute('dir',rtl?'rtl':'ltr');
+  document.documentElement.setAttribute('dir','ltr');
   document.documentElement.setAttribute('lang',lang);
+  if(rtl){
+    document.body.setAttribute('dir','rtl');
+  }else{
+    document.body.removeAttribute('dir');
+  }
   const labels={fr:['Juil','Août','Sept','Oct','Nov','Déc'],en:['Jul','Aug','Sep','Oct','Nov','Dec'],es:['Jul','Ago','Sep','Oct','Nov','Dic'],ar:['يول','أغس','سبت','أكت','نوف','ديس']}[lang]||monthLabels.fr;
   const xs=[14,56,98,140,182,224];
   const txt=document.querySelectorAll('svg text');
