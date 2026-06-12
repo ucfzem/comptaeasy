@@ -12,7 +12,7 @@ let SQL;
 export async function getDb() {
   if (db) return db;
   SQL = await initSqlJs({
-    locateFile: file => path.join(process.cwd(), 'node_modules', 'sql.js', 'dist', file)
+    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/${file}`
   });
   if (fs.existsSync(DB_PATH)) {
     const buf = fs.readFileSync(DB_PATH);
