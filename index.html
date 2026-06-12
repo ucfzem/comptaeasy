@@ -91,7 +91,9 @@ body {
   align-items: center;
   gap: 10px;
   padding: 0 20px;
+  padding-top: 12px;
   padding-top: env(safe-area-inset-top, 12px);
+  height: calc(var(--header-h) + 12px);
   height: calc(var(--header-h) + env(safe-area-inset-top, 12px));
   border-block-end: 1px solid var(--border);
 }
@@ -193,7 +195,9 @@ body {
   display: flex;
   align-items: center;
   padding: 0 24px;
+  padding-top: 12px;
   padding-top: env(safe-area-inset-top, 12px);
+  min-height: calc(var(--header-h) + 12px);
   min-height: calc(var(--header-h) + env(safe-area-inset-top, 12px));
   gap: 16px;
   position: sticky;
@@ -822,14 +826,7 @@ function applyLang(lang){
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(d[k])el.placeholder=d[k]});
   const ai=document.getElementById('ai-response');
   if(ai&&d['ai.greeting']&&d['ai.greeting.msg'])ai.innerHTML=`<strong>${d['ai.greeting']}</strong> ${d['ai.greeting.msg']}`;
-  const rtl=lang==='ar';
-  document.documentElement.setAttribute('dir','ltr');
   document.documentElement.setAttribute('lang',lang);
-  if(rtl){
-    document.body.setAttribute('dir','rtl');
-  }else{
-    document.body.removeAttribute('dir');
-  }
   const labels={fr:['Juil','Août','Sept','Oct','Nov','Déc'],en:['Jul','Aug','Sep','Oct','Nov','Dec'],es:['Jul','Ago','Sep','Oct','Nov','Dic'],ar:['يول','أغس','سبت','أكت','نوف','ديس']}[lang]||monthLabels.fr;
   const xs=[14,56,98,140,182,224];
   const txt=document.querySelectorAll('svg text');
