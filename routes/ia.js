@@ -30,8 +30,11 @@ router.post('/ask', async (req, res) => {
 
   if (OR_KEY) {
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Authorization': `Bearer ${OR_KEY}`,
           'Content-Type': 'application/json',
@@ -39,7 +42,7 @@ router.post('/ask', async (req, res) => {
           'X-Title': 'ComptaEasy',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'google/gemini-2.0-flash-001',
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: question },
@@ -48,6 +51,7 @@ router.post('/ask', async (req, res) => {
           temperature: 0.3,
         }),
       });
+      clearTimeout(timeout);
 
       const data = await response.json();
 
