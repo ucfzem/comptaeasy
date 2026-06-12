@@ -3,8 +3,9 @@ import { Router } from 'express';
 const router = Router();
 const OR_KEY = process.env.OPENROUTER_KEY;
 
-const SYSTEM_PROMPT = `Tu es un expert-comptable et fiscaliste senior français.
-Réponds avec précision en utilisant la terminologie du PCG, du CGI et des normes IFRS.
+const SYSTEM_PROMPT = `Tu es un expert-comptable et fiscaliste senior.
+Réponds dans la même langue que la question (français, anglais, espagnol, arabe…).
+Utilise la terminologie du PCG, du CGI et des normes IFRS.
 Sois concis (max 150 mots). Si on te pose une question hors comptabilité/fiscalité,
 réponds "Je suis spécialisé en comptabilité et fiscalité. Posez-moi une question sur ces sujets."
 Utilise du HTML simple pour la mise en forme (strong, br).`;
