@@ -1,6 +1,8 @@
 import initSqlJs from 'sql.js';
 import express from 'express';
 import cors from 'cors';
+import { createRequire } from 'module';
+const _require = createRequire(import.meta.url);
 
 const app = express();
 app.use(cors());
@@ -9,7 +11,7 @@ app.use(express.json());
 app.get('/api/health', async (req, res) => {
   try {
     const SQL = await initSqlJs({
-      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/${file}`
+      locateFile: file => require.resolve(`sql.js/dist/${file}`)
     });
     const db = new SQL.Database();
     const result = db.exec("SELECT sqlite_version() as v")[0];
