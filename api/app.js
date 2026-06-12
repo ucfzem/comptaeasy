@@ -15,7 +15,7 @@ import financeRouter from '../routes/finance.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-initSchema();
+await initSchema();
 
 const app = express();
 app.use(cors());
