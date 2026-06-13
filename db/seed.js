@@ -1,8 +1,8 @@
 import { getDb, saveDb } from './database.js';
 import { v4 as uuid } from 'uuid';
 
-export async function runSeed() {
-  const d = await getDb();
+export function runSeed() {
+  const d = getDb();
 
   for (const t of ['entries', 'clients', 'alerts', 'tenants']) {
     d.run(`DELETE FROM ${t}`);

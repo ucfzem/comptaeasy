@@ -3,19 +3,20 @@ import { getDb } from '../db/database.js';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
-  const d = await getDb();
+router.get('/', (req, res) => {
+  const d = getDb();
   const year = req.query.year || 2024;
-  const rows = d.exec(`SELECT * FROM entries WHERE tenant_id='demo-001' AND date LIKE '${year}-%' ORDER BY date`);
+  const result = d.exec(`SELECT * FROM entries WHERE tenant_id='demo-001' AND date LIKE '${year}-%' ORDER BY date`);
+  const rows = result.length ? result[0].values : [];
 
   const lines = ['JournalCode;JournalLib;EcritureNum;EcritureDate;CompteNum;CompteLib;PieceNum;EcritureLib;Debit;Credit;EcritureLet;DateLet;ValidDate;Montantdevise;Iodevise'];
   rows.forEach((r, i) => {
-    const date = (r.values[0][2] || '').replace(/-/g, '');
+    const date = (r[2] || '').replace(/-/g, '');
     const row = [
-      'VT', 'Opérations diverses', i + 1, date, r.values[0][5], `Compte ${r.values[0][5]}`,
-      r.values[0][4] || `PIECE-${i + 1}`, r.values[0][3],
-      Number(r.values[0][6]).toFixed(2), Number(r.values[0][7]).toFixed(2),
-      r.values[0][9] || '', '', date, '', '',
+      'VT', 'Opérations diverses', i + 1, date, r[5], `Compte ${r[5]}`,
+      r[4] || `PIECE-${i + 1}`, r[3],
+      Number(r[6]).toFixed(2), Number(r[7]).toFixed(2),
+      r[9] || '', '', date, '', '',
     ].join(';');
     lines.push(row);
   });

@@ -4,21 +4,23 @@ import { v4 as uuid } from 'uuid';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
-  const d = await getDb();
-  const rows = d.exec("SELECT * FROM entries WHERE tenant_id='demo-001' ORDER BY date DESC");
+router.get('/', (req, res) => {
+  const d = getDb();
+  const result = d.exec("SELECT * FROM entries WHERE tenant_id='demo-001' ORDER BY date DESC");
+  const rows = result.length ? result[0].values : [];
+
   const entries = rows.map(r => ({
-    id: r.values[0][0], date: r.values[0][2], label: r.values[0][3],
-    piece: r.values[0][4], account_code: r.values[0][5],
-    debit: Number(r.values[0][6]), credit: Number(r.values[0][7]),
-    status: r.values[0][8], match_ref: r.values[0][9],
+    id: r[0], date: r[2], label: r[3],
+    piece: r[4], account_code: r[5],
+    debit: Number(r[6]), credit: Number(r[7]),
+    status: r[8], match_ref: r[9],
   }));
   const unmatched = req.query.unmatched === 'true' ? entries.filter(e => !e.match_ref) : entries;
   res.json({ entries: unmatched, total: unmatched.length, unmatched_count: entries.filter(e => !e.match_ref).length });
 });
 
-router.post('/', async (req, res) => {
-  const d = await getDb();
+router.post('/', (req, res) => {
+  const d = getDb();
   const { date, label, piece, account_code, debit, credit } = req.body;
   const id = uuid();
   d.run("INSERT INTO entries (id, tenant_id, date, label, piece, account_code, debit, credit) VALUES (?,?,?,?,?,?,?,?)",
@@ -27,8 +29,8 @@ router.post('/', async (req, res) => {
   res.json({ success: true, id });
 });
 
-router.post('/match', async (req, res) => {
-  const d = await getDb();
+router.post('/match', (req, res) => {
+  const d = getDb();
   const { ids, ref } = req.body;
   if (!ids?.length) return res.status(400).json({ error: 'No IDs' });
   const matchRef = ref || `M-${Date.now()}`;
@@ -37,8 +39,8 @@ router.post('/match', async (req, res) => {
   res.json({ success: true, matched: ids.length, ref: matchRef });
 });
 
-router.patch('/:id', async (req, res) => {
-  const d = await getDb();
+router.patch('/:id', (req, res) => {
+  const d = getDb();
   const sets = [];
   for (const k of ['label', 'account_code', 'debit', 'credit', 'status']) {
     if (req.body[k] !== undefined) sets.push(`${k}=${typeof req.body[k] === 'string' ? `'${req.body[k]}'` : req.body[k]}`);
