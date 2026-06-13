@@ -133,7 +133,7 @@ router.post('/ask', async (req, res) => {
   }
 
   // Fallback local
-  const q = question.toLowerCase();
+  const q = ' ' + question.toLowerCase().replace(/[^a-z0-9à-ÿ ]/g, '') + ' ';
   const fb = FALLBACKS[curLang] || FALLBACKS.en;
   const unavailable = { fr:'Service IA momentanément indisponible. Veuillez réessayer.', en:'AI service temporarily unavailable. Please try again.', es:'Servicio de IA temporalmente no disponible. Intente de nuevo.', ar:'خدمة الذكاء الاصطناعي غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى.' };
   let answer = unavailable[curLang] || unavailable.fr;
