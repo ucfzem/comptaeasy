@@ -68,7 +68,7 @@ const FALLBACKS = {
   },
 };
 const KEYWORDS = {
-  is: [' is ', ' impôt ', 'corporat', 'cit', 'income tax', 'impuesto'],
+  is: [' is ', ' impôt ', 'corporat', 'income tax', 'impuesto', 'impôt sur les sociétés'],
   tva: [' tva ', ' vat ', ' iva ', 'value added tax', 'taxe sur la valeur'],
   fec: [' fec ', 'fichier', 'écritures comptables', 'audit file'],
   cet: [' cet ', 'cotisation minimale', 'cm '],
@@ -78,7 +78,7 @@ const KEYWORDS = {
   'plus-value': ['plus-value', 'plusvalue', 'capital gain', 'plusvalía'],
   'credit impot': ['credit', 'crédit', 'crédito', 'tax credit', 'r&d', 'recherche', 'i+d', 'research'],
   perte: ['perte', 'déficit', 'deficit', 'loss', 'déficitaire', 'deficitario', 'resultat négatif', 'resultado negativo', 'negative result', 'bénéfice 0', 'pas de bénéfice', 'pas de chiffre'],
-  resultat: ['résultat', 'resultat', 'resultado', 'result', 'fiscal', 'taxable income', 'bénéfice', 'beneficio', 'profit'],
+  resultat: ['résultat', 'resultat', 'resultado', 'result', 'fiscal', 'taxable income', 'profit', 'déclaration', 'resultado contable'],
   seuil: ['seuil', 'seuil', 'threshold', 'micro-entrepris', 'micro entrepris', 'microempres', 'franchise'],
 };
 
