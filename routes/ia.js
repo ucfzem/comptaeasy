@@ -91,7 +91,7 @@ router.post('/ask', async (req, res) => {
           'X-Title': 'ComptaEasy',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'meta-llama/llama-3.2-3b-instruct:free',
           messages: [
             { role: 'system', content: buildPrompt(lang) },
             { role: 'user', content: question },
