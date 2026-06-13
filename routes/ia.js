@@ -28,7 +28,8 @@ const FALLBACKS = {
     is: 'Taux IS Maroc : <strong>31%</strong> (bénéfice > 100M MAD), <strong>20%</strong> (1M-100M MAD), <strong>10%</strong> (≤ 1M MAD). Art. 17-I CGI marocain.',
     tva: 'TVA Maroc : régime réel pour CA > 2M MAD (biens) ou > 500K MAD (services). Taux : 20% (normal), 14%, 10%, 7%. Déclaration mensuelle.',
     fec: 'FEC Maroc : Fichier des Écritures Comptables obligatoire en cas de contrôle DGI. Norme DGI : 15 colonnes, format CSV/UTF-8.',
-    cet: 'CM (Cotisation Minimale) : 0,5% du CA brut. Déductible de l\'IS sauf exception. Seuil appliqué selon le chiffre d\'affaires.',
+    cet: 'CM (Cotisation Minimale) : 0,50% du CA HT (Art. 144 CGI). Minimum : 3 000 MAD. Exonérée les 36 premiers mois (Art. 144-I-1°). Déductible de l\'IS.',
+    perte: 'En cas de résultat déficitaire : IS = 0. Mais la CM (0,50% du CA HT, min 3 000 MAD) reste due sauf si l\'entreprise est dans ses 36 premiers mois (exonération CM). Nouvelle société déficitaire = 0 à payer.',
     cvae: 'TVA Maroc : taux 20% (normal), 14%, 10%, 7%. Régime réel pour CA > 2M MAD (biens) ou > 500K MAD (services).',
     cfe: 'Patente (cotisation minimale) : due par toute personne exerçant une activité professionnelle au Maroc. Calculée sur le CA.',
     amort: 'Amortissement linéaire = coût × (1/durée). Dégressif possible pour biens neufs (durée ≥ 3 ans) au Maroc.',
@@ -41,7 +42,8 @@ const FALLBACKS = {
     is: 'Tipos IS Marruecos: <strong>31%</strong> (beneficio > 100M MAD), <strong>20%</strong> (1M-100M MAD), <strong>10%</strong> (≤ 1M MAD). Art. 17-I CGI marroquí.',
     tva: 'IVA Marruecos: régimen real para ingresos > 2M MAD (bienes) o > 500K MAD (servicios). Tipos: 20%, 14%, 10%, 7%. Declaración mensual.',
     fec: 'FEC Marruecos: obligatorio en caso de control DGI. Formato DGI: 15 columnas, CSV/UTF-8.',
-    cet: 'CM (Cotización Mínima): 0,5% de los ingresos brutos. Deducible del IS salvo excepciones.',
+    cet: 'CM (Cotización Mínima): 0,50% de los ingresos brutos (Art. 144 CGI). Mínimo: 3 000 MAD. Exenta los primeros 36 meses (Art. 144-I-1°). Deducible del IS.',
+    perte: 'Si resultado deficitario: IS = 0. Pero la CM (0,50% de ingresos, mín. 3 000 MAD) sigue aplicándose salvo exención por primeros 36 meses. Nueva empresa deficitaria = 0 a pagar.',
     cvae: 'IVA Marruecos: 20% (general), 14%, 10%, 7%. Régimen real para ingresos > 2M MAD (bienes) o > 500K MAD (servicios).',
     cfe: 'Patente marroquí: aplicable a toda actividad profesional. Calculada sobre los ingresos.',
     amort: 'Amortización lineal = costo × (1/vida útil). Degresivo posible para bienes nuevos (vida ≥ 3 años) en Marruecos.',
@@ -54,7 +56,8 @@ const FALLBACKS = {
     is: 'Moroccan CIT rates: <strong>31%</strong> (profit > 100M MAD), <strong>20%</strong> (1M-100M MAD), <strong>10%</strong> (≤ 1M MAD). Art. 17-I Moroccan CGI.',
     tva: 'Moroccan VAT: standard regime for revenue > 2M MAD (goods) or > 500K MAD (services). Rates: 20%, 14%, 10%, 7%. Monthly return.',
     fec: 'Moroccan FEC (Fichier des Écritures Comptables) mandatory for DGI tax audits. DGI format: 15 columns, CSV/UTF-8.',
-    cet: 'CM (Cotisation Minimale): 0.5% of gross revenue. Deductible from CIT except in specific cases.',
+    cet: 'CM (Cotisation Minimale): 0.50% of gross revenue (Art. 144 CGI). Minimum: 3,000 MAD. Exempt for first 36 months (Art. 144-I-1°). Deductible from CIT.',
+    perte: 'With a tax loss: CIT = 0. But CM (0.50% of revenue, min 3,000 MAD) is still due unless the company is within its first 36 months (CM exemption). New loss-making company = 0 to pay.',
     cvae: 'Moroccan VAT: 20% (standard), 14%, 10%, 7%. Real regime for revenue > 2M MAD (goods) or > 500K MAD (services).',
     cfe: 'Professional tax (patente) in Morocco. Applies to all professional activities. Calculated based on revenue.',
     amort: 'Straight-line depreciation = cost × (1/useful life). Declining balance for new assets (life ≥ 3 years) in Morocco.',
@@ -76,6 +79,7 @@ const KEYWORDS = {
   'credit impot': ['credit', 'crédit', 'crédito', 'tax credit', 'r&d', 'recherche', 'i+d', 'research'],
   resultat: ['résultat', 'resultat', 'resultado', 'result', 'fiscal', 'taxable income', 'bénéfice', 'beneficio', 'profit'],
   seuil: ['seuil', 'seuil', 'threshold', 'micro-entrepris', 'micro entrepris', 'microempres', 'franchise'],
+  perte: ['perte', 'déficit', 'deficit', 'loss', 'déficitaire', 'deficitario', 'resultat négatif', 'resultado negativo', 'negative result', 'bénéfice 0', 'pas de bénéfice', 'pas de chiffre'],
 };
 
 router.post('/ask', async (req, res) => {
