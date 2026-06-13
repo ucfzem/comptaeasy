@@ -3,6 +3,8 @@
   "builds": [
     { "src": "api/index.js", "use": "@vercel/node", "config": { "includeFiles": ["api/*.wasm", "db/*.wasm"] } },
     { "src": "*.html", "use": "@vercel/static" },
+    { "src": "robots.txt", "use": "@vercel/static" },
+    { "src": "sitemap.xml", "use": "@vercel/static" },
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
