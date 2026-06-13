@@ -82,7 +82,6 @@ const FALLBACKS = {
   },
 };
 
-};
 const KEYWORDS = {
   is: [' is ', ' impôt ', 'corporat', 'income tax', 'impuesto', 'impôt sur les sociétés', 'ضريبة الشركات', 'ضريبة', 'الضرائب'],
   tva: [' tva ', ' vat ', ' iva ', 'value added tax', 'taxe sur la valeur', 'ضريبة القيمة المضافة', 'ض.ق.م.'],
