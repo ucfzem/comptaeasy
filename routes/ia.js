@@ -64,7 +64,19 @@ const FALLBACKS = {
     seuil: 'Moroccan micro-enterprise: revenue ≤ 2M MAD (goods) or ≤ 1M MAD (services). VAT exemption regime applicable.',
   },
 };
-const FALLBACK_KEYS = Object.keys(FALLBACKS.fr);
+const KEYWORDS = {
+  is: [' is ', ' impôt ', 'corporat', 'cit', 'income tax', 'impuesto'],
+  tva: [' tva ', ' vat ', ' iva ', 'value added tax', 'taxe sur la valeur'],
+  fec: [' fec ', 'fichier', 'écritures comptables', 'audit file'],
+  cet: [' cet ', 'cotisation minimale', 'cm '],
+  cvae: [' cvae ', 'cotisation valeur ajoutée'],
+  cfe: [' cfe ', 'patente', 'cotisation foncière', 'professional tax'],
+  amort: ['amort', 'depreciat', 'amortización'],
+  'plus-value': ['plus-value', 'plusvalue', 'capital gain', 'plusvalía'],
+  'credit impot': ['credit', 'crédit', 'crédito', 'tax credit', 'r&d', 'recherche', 'i+d', 'research'],
+  resultat: ['résultat', 'resultat', 'resultado', 'result', 'fiscal', 'taxable income', 'bénéfice', 'beneficio', 'profit'],
+  seuil: ['seuil', 'seuil', 'threshold', 'micro-entrepris', 'micro entrepris', 'microempres', 'franchise'],
+};
 
 router.post('/ask', async (req, res) => {
   const { question, lang } = req.body;
@@ -125,8 +137,8 @@ router.post('/ask', async (req, res) => {
   const fb = FALLBACKS[curLang] || FALLBACKS.en;
   const unavailable = { fr:'Service IA momentanément indisponible. Veuillez réessayer.', en:'AI service temporarily unavailable. Please try again.', es:'Servicio de IA temporalmente no disponible. Intente de nuevo.', ar:'خدمة الذكاء الاصطناعي غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى.' };
   let answer = unavailable[curLang] || unavailable.fr;
-  for (const key of FALLBACK_KEYS) {
-    if (q.includes(key)) { answer = fb[key]; break; }
+  for (const [key, terms] of Object.entries(KEYWORDS)) {
+    if (terms.some(t => q.includes(t))) { answer = fb[key]; break; }
   }
   res.json({ answer, sources: ['Cache local ComptaEasy'] });
 });
