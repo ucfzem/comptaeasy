@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/', (req, res) => {
   const d = getDb();
-  const year = req.query.year || 2024;
+  const year = req.query.year || 2026;
   const result = d.exec(`SELECT * FROM entries WHERE tenant_id='demo-001' AND date LIKE '${year}-%' ORDER BY date`);
   const rows = result.length ? result[0].values : [];
 

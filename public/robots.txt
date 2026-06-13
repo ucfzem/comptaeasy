@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://comptaeasy.vercel.app/sitemap.xml
