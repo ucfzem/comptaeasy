@@ -5,12 +5,19 @@ const OR_KEY = process.env.OPENROUTER_KEY;
 
 const LANG_MAP = { fr:'français', en:'anglais', es:'espagnol', ar:'arabe' };
 
+const OUT_OF_SCOPE = {
+  fr: 'Je suis spécialisé en comptabilité et fiscalité. Posez-moi une question sur ces sujets.',
+  en: 'I am specialized in accounting and taxation. Please ask me a question on these topics.',
+  es: 'Estoy especializado en contabilidad y fiscalidad. Hágame una pregunta sobre estos temas.',
+  ar: 'أنا متخصص في المحاسبة والضرائب. يرجى طرح سؤال حول هذه المواضيع.'
+};
 function buildPrompt(lang) {
   const langName = LANG_MAP[lang] || 'français';
+  const oos = OUT_OF_SCOPE[lang] || OUT_OF_SCOPE.fr;
   return `Tu es un expert-comptable et fiscaliste senior.
 Réponds en ${langName}. Utilise la terminologie du PCG, du CGI et des normes IFRS.
 Sois concis (max 150 mots). Si on te pose une question hors comptabilité/fiscalité,
-réponds "Je suis spécialisé en comptabilité et fiscalité. Posez-moi une question sur ces sujets."
+réponds "${oos}"
 Utilise du HTML simple pour la mise en forme (strong, br).`;
 }
 
