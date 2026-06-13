@@ -14,8 +14,9 @@ const OUT_OF_SCOPE = {
 function buildPrompt(lang) {
   const langName = LANG_MAP[lang] || 'français';
   const oos = OUT_OF_SCOPE[lang] || OUT_OF_SCOPE.fr;
-  return `Tu es un expert-comptable et fiscaliste senior.
-Réponds en ${langName}. Utilise la terminologie du PCG, du CGI et des normes IFRS.
+  return `Tu es un expert-comptable et fiscaliste marocain senior.
+Réponds en ${langName}. Tu appliques UNIQUEMENT la législation fiscale et comptable du MAROC (CGI marocain, PCG marocain, normes IFRS adaptées au Maroc).
+Ne donne jamais de règles françaises — seulement les règles marocaines.
 Sois concis (max 150 mots). Si on te pose une question hors comptabilité/fiscalité,
 réponds "${oos}"
 Utilise du HTML simple pour la mise en forme (strong, br).`;
@@ -23,30 +24,30 @@ Utilise du HTML simple pour la mise en forme (strong, br).`;
 
 const FALLBACKS = {
   fr: {
-    is: 'Le taux normal de l\'IS est fixé à <strong>25%</strong> pour les exercices ouverts depuis 2022. Le taux réduit de <strong>15%</strong> s\'applique sur la fraction ≤ 42 622 € (PME éligibles).',
-    tva: 'Régime réel normal de TVA : CA > 840 000 € (ventes) ou > 254 000 € (prestations). Déclaration <strong>CA3</strong>. Taux normal : <strong>20%</strong>.',
-    fec: 'FEC (Fichier des Écritures Comptables) obligatoire en cas de contrôle DGFiP. Norme 2013 : 18 colonnes, format CSV/UTF-8.',
-    cet: 'CET = CFE + CVAE. Plafond : 3% de la VA. Déclaration obligatoire avant la 2<sup>ème</sup> échéance.',
-    cvae: 'CVAE : cotisation sur la valeur ajoutée des entreprises (CA > 500k€). Taux variable selon CA. Déclaration n°1329AC.',
-    cfe: 'CFE : cotisation foncière des entreprises. Base = valeur locative des biens imposables. Due par tout contribuable exerçant une activité professionnelle non salariée.',
-    amort: 'Amortissement linéaire = coût × (1/durée). Dégressif possible pour biens neufs (durée ≥ 3 ans).',
-    'plus-value': 'Plus-value professionnelle : court terme (≤ 2 ans) imposée au BIC/BN, long terme (> 2 ans) au taux de 12,8% + prélèvements sociaux.',
-    'credit impot': 'CIR (Crédit d\'Impôt Recherche) : 30% des dépenses de R&D ≤ 100M€, 5% au-delà. Plafond à 100M€. CICE remplacé par baisse de charges.',
-    resultat: 'Résultat comptable → résultat fiscal après réintégrations/déductions extra-comptables. Tableau 2058-A.',
-    seuil: 'Micro-entreprise : CA ≤ 188 700 € (ventes) ou ≤ 77 700 € (prestations). Franchise TVA jusqu\'à 91 900 € (ventes) ou 36 800 € (prestations).',
+    is: 'Taux IS Maroc : <strong>31%</strong> (bénéfice > 100M MAD), <strong>20%</strong> (1M-100M MAD), <strong>10%</strong> (≤ 1M MAD). Art. 17-I CGI marocain.',
+    tva: 'TVA Maroc : régime réel pour CA > 2M MAD (biens) ou > 500K MAD (services). Taux : 20% (normal), 14%, 10%, 7%. Déclaration mensuelle.',
+    fec: 'FEC Maroc : Fichier des Écritures Comptables obligatoire en cas de contrôle DGI. Norme DGI : 15 colonnes, format CSV/UTF-8.',
+    cet: 'CM (Cotisation Minimale) : 0,5% du CA brut. Déductible de l\'IS sauf exception. Seuil appliqué selon le chiffre d\'affaires.',
+    cvae: 'TVA Maroc : taux 20% (normal), 14%, 10%, 7%. Régime réel pour CA > 2M MAD (biens) ou > 500K MAD (services).',
+    cfe: 'Patente (cotisation minimale) : due par toute personne exerçant une activité professionnelle au Maroc. Calculée sur le CA.',
+    amort: 'Amortissement linéaire = coût × (1/durée). Dégressif possible pour biens neufs (durée ≥ 3 ans) au Maroc.',
+    'plus-value': 'Plus-value professionnelle Maroc : imposée au taux de l\'IS (31%/20%/10%) selon le montant du bénéfice.',
+    'credit impot': 'Crédit d\'impôt recherche Maroc : 30% des dépenses de R&D, plafonné à 10M MAD par an.',
+    resultat: 'Résultat comptable → résultat fiscal après réintégrations/déductions. Déclaration selon modèle DGI marocain.',
+    seuil: 'Micro-entreprise Maroc : CA ≤ 2M MAD (ventes) ou ≤ 1M MAD (services). Régime de la franchise TVA applicable.',
   },
   en: {
-    is: 'Corporate income tax: standard rate <strong>25%</strong> (2022+). Reduced <strong>15%</strong> on first €42,622 for eligible SMEs.',
-    tva: 'Standard VAT regime: revenue > €840K (goods) or > €254K (services). Monthly <strong>CA3</strong> return. Standard rate: <strong>20%</strong>.',
-    fec: 'FEC (Standard Audit File for Tax) mandatory for tax audits. 2013 format: 18 columns, CSV/UTF-8.',
-    cet: 'CET = CFE + CVAE. Cap: 3% of value added. File before the 2nd installment deadline.',
-    cvae: 'CVAE: contribution on business value added (revenue > €500K). Variable rate. Form n°1329AC.',
-    cfe: 'CFE: business property tax. Based on rental value of taxable assets.',
-    amort: 'Straight-line depreciation = cost × (1/useful life). Declining balance available for new assets (life ≥ 3 years).',
-    'plus-value': 'Capital gains: short-term (≤ 2 years) taxed at income tax rates, long-term (> 2 years) at 12.8% + social levies.',
-    'credit impot': 'R&D Tax Credit (CIR): 30% of R&D expenses up to €100M, 5% beyond. Cap at €100M.',
-    resultat: 'Book income → taxable income after add-backs and deductions. Form 2058-A.',
-    seuil: 'Micro-enterprise: revenue ≤ €188,700 (goods) or ≤ €77,700 (services). VAT exemption up to €91,900 (goods) or €36,800 (services).',
+    is: 'Moroccan CIT rates: <strong>31%</strong> (profit > 100M MAD), <strong>20%</strong> (1M-100M MAD), <strong>10%</strong> (≤ 1M MAD). Art. 17-I Moroccan CGI.',
+    tva: 'Moroccan VAT: standard regime for revenue > 2M MAD (goods) or > 500K MAD (services). Rates: 20%, 14%, 10%, 7%. Monthly return.',
+    fec: 'Moroccan FEC (Fichier des Écritures Comptables) mandatory for DGI tax audits. DGI format: 15 columns, CSV/UTF-8.',
+    cet: 'CM (Cotisation Minimale): 0.5% of gross revenue. Deductible from CIT except in specific cases.',
+    cvae: 'Moroccan VAT: 20% (standard), 14%, 10%, 7%. Real regime for revenue > 2M MAD (goods) or > 500K MAD (services).',
+    cfe: 'Professional tax (patente) in Morocco. Applies to all professional activities. Calculated based on revenue.',
+    amort: 'Straight-line depreciation = cost × (1/useful life). Declining balance for new assets (life ≥ 3 years) in Morocco.',
+    'plus-value': 'Moroccan capital gains: taxed at CIT rate (31%/20%/10%) based on profit bracket.',
+    'credit impot': 'Moroccan R&D tax credit: 30% of R&D expenses, capped at 10M MAD per year.',
+    resultat: 'Book income → taxable income after add-backs and deductions. Moroccan DGI declaration format.',
+    seuil: 'Moroccan micro-enterprise: revenue ≤ 2M MAD (goods) or ≤ 1M MAD (services). VAT exemption regime applicable.',
   },
 };
 const FALLBACK_KEYS = Object.keys(FALLBACKS.fr);
