@@ -108,9 +108,12 @@ router.post('/ask', async (req, res) => {
       const text = data?.choices?.[0]?.message?.content;
       if (!text) throw new Error('Empty response');
 
+      const rateLimitPatterns = /free usage|rate\s*limit|quota|trop de requ[eè]tes|tentative dans|429|too many /i;
+      if (rateLimitPatterns.test(text)) throw new Error('API rate limited');
+
       return res.json({
         answer: text.replace(/\n/g, '<br>'),
-        sources: ['IA Gemini · OpenRouter · ComptaEasy'],
+        sources: ['IA · OpenRouter · ComptaEasy'],
       });
     } catch (e) {
       console.error('OpenRouter error:', e.message);
