@@ -800,7 +800,8 @@ const AI_ANSWERS = {
     {q:"tva",a:"TVA Maroc : régime réel pour CA > 2M MAD (biens) ou > 500K MAD (services). Taux : 20% (normal), 14%, 10%, 7%. Déclaration mensuelle ou trimestrielle."},
     {q:"optimisation",a:"Pour optimiser l'IS 2026 : 1. Provisionner les risques avant le 31/12, 2. Maximiser les amortissements dégressifs, 3. Intégrer le crédit d'impôt recherche (CIR), 4. Utiliser le régime des sociétés mères (plus-values nettes)."},
     {q:"amort",a:"Dégressif : 1,25× linéaire pour +6 ans, 1,75× pour +4 ans, 2,25× pour +3 ans. Linéaire recommandé pour les biens de faible valeur."},
-    {q:"cvae",a:"Cotisation Minimale (CM) : 0,5% du CA brut. Déductible de l[…]IS sauf exception."},
+    {q:"cvae",a:"CM (Cotisation Minimale) : 0,50% du CA HT (Art. 144 CGI). Minimum : 3 000 MAD. Exonérée les 36 premiers mois (Art. 144-I-1°). Déductible de l'IS."},
+    {q:"perte",a:"Résultat déficitaire ? IS = 0. Mais la CM (0,50% du CA HT, min 3 000 MAD) reste due, sauf si <strong>36 premiers mois</strong> (exonération CM, Art. 144-I-1°). Nouvelle société déficitaire = rien à payer."},
     {q:"fec",a:"FEC (Fichier des Écritures Comptables) obligatoire en cas de contrôle DGI. Norme 2013 : 15 colonnes, format CSV/UTF-8. Délai de transmission : 15 jours ouvrés."},
     {q:"bofip",a:"DGI-BIC : les provisions pour risques doivent être justifiées par un litige ou un risque avéré. Le simple risque de change ou de taux n'est pas provisionnable."},
     {q:"default",a:"Bonjour Ahmed. J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2026-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?"}
@@ -1331,7 +1332,7 @@ function filterClients(q) {
 function searchVeille() {
   const q = document.getElementById('veille-input')?.value?.toLowerCase() || '';
   const result = document.getElementById('veille-result');
-  const map = {is:'Taux IS Maroc 2026 : 31% — DGI CGI art. 17-I',tva:'TVA Maroc : franchise 500 000 MAD — DGI CGI art. 92',fec:'FEC Maroc : délai 30 jours — CGI art. 25',cvae:'Échéance Cotisation Minimale 2026 au 2 mai 2026'};
+  const map = {is:'Taux IS Maroc 2026 : 31% — DGI CGI art. 17-I',tva:'TVA Maroc : franchise 500 000 MAD — DGI CGI art. 92',fec:'FEC Maroc : délai 30 jours — CGI art. 25',cvae:'CM 2026 : 0,50% du CA HT, min 3 000 MAD. Exonération 36 premiers mois. Échéance : 2 mai 2026'};
   const found = Object.entries(map).find(([k]) => q.includes(k));
   result.innerHTML = found ? `<span style="color:var(--text-secondary)">📌 ${found[1]}</span>` : '<span style="color:var(--text-muted);font-style:italic">Aucun résultat. Essayez : IS, TVA, FEC, CM</span>';
 }
