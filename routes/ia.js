@@ -17,6 +17,7 @@ function buildPrompt(lang) {
   return `Tu es un expert-comptable et fiscaliste marocain senior.
 Réponds en ${langName}. Tu appliques UNIQUEMENT la législation fiscale et comptable du MAROC (CGI marocain, PCG marocain, normes IFRS adaptées au Maroc).
 Ne donne jamais de règles françaises — seulement les règles marocaines.
+Les questions d'optimisation fiscale (optimisation IS/IR, optimisation TVA, optimisation des amortissements) SONT dans ton domaine.
 Sois concis (max 150 mots). Si on te pose une question hors comptabilité/fiscalité,
 réponds "${oos}"
 Utilise du HTML simple pour la mise en forme (strong, br).`;
@@ -35,6 +36,19 @@ const FALLBACKS = {
     'credit impot': 'Crédit d\'impôt recherche Maroc : 30% des dépenses de R&D, plafonné à 10M MAD par an.',
     resultat: 'Résultat comptable → résultat fiscal après réintégrations/déductions. Déclaration selon modèle DGI marocain.',
     seuil: 'Micro-entreprise Maroc : CA ≤ 2M MAD (ventes) ou ≤ 1M MAD (services). Régime de la franchise TVA applicable.',
+  },
+  es: {
+    is: 'Tipos IS Marruecos: <strong>31%</strong> (beneficio > 100M MAD), <strong>20%</strong> (1M-100M MAD), <strong>10%</strong> (≤ 1M MAD). Art. 17-I CGI marroquí.',
+    tva: 'IVA Marruecos: régimen real para ingresos > 2M MAD (bienes) o > 500K MAD (servicios). Tipos: 20%, 14%, 10%, 7%. Declaración mensual.',
+    fec: 'FEC Marruecos: obligatorio en caso de control DGI. Formato DGI: 15 columnas, CSV/UTF-8.',
+    cet: 'CM (Cotización Mínima): 0,5% de los ingresos brutos. Deducible del IS salvo excepciones.',
+    cvae: 'IVA Marruecos: 20% (general), 14%, 10%, 7%. Régimen real para ingresos > 2M MAD (bienes) o > 500K MAD (servicios).',
+    cfe: 'Patente marroquí: aplicable a toda actividad profesional. Calculada sobre los ingresos.',
+    amort: 'Amortización lineal = costo × (1/vida útil). Degresivo posible para bienes nuevos (vida ≥ 3 años) en Marruecos.',
+    'plus-value': 'Plusvalía profesional Marruecos: gravada al tipo del IS (31%/20%/10%) según el beneficio.',
+    'credit impot': 'Crédito fiscal I+D Marruecos: 30% de gastos en I+D, límite 10M MAD al año.',
+    resultat: 'Resultado contable → resultado fiscal tras ajustes. Declaración según modelo DGI marroquí.',
+    seuil: 'Microempresa Marruecos: ingresos ≤ 2M MAD (bienes) o ≤ 1M MAD (servicios). Exención de IVA aplicable.',
   },
   en: {
     is: 'Moroccan CIT rates: <strong>31%</strong> (profit > 100M MAD), <strong>20%</strong> (1M-100M MAD), <strong>10%</strong> (≤ 1M MAD). Art. 17-I Moroccan CGI.',
@@ -105,7 +119,7 @@ router.post('/ask', async (req, res) => {
 
   // Fallback local
   const q = question.toLowerCase();
-  const fb = FALLBACKS[curLang] || FALLBACKS.fr;
+  const fb = FALLBACKS[curLang] || FALLBACKS.en;
   const unavailable = { fr:'Service IA momentanément indisponible. Veuillez réessayer.', en:'AI service temporarily unavailable. Please try again.', es:'Servicio de IA temporalmente no disponible. Intente de nuevo.', ar:'خدمة الذكاء الاصطناعي غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى.' };
   let answer = unavailable[curLang] || unavailable.fr;
   for (const key of FALLBACK_KEYS) {
