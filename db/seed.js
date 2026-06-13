@@ -35,12 +35,12 @@ export function runSeed() {
   }
 
   const alerts = [
-    ['Déclaration CA3 — TVA mensuelle', 'Montant à déclarer : 569 500 € — Compte 44571', 'red', '2026-01-15'],
+    ['TVA — Déclaration mensuelle Maroc', 'Montant à déclarer : 569 500 MAD — Compte 34551', 'red', '2026-01-15'],
     ['Acompte IS — 4ème échéance', 'Provision estimée : 35 593 €', 'amber', '2026-12-15'],
     ['Clôture bilan — Dossier T. Omar SARL', 'Inventaire physique non confirmé', 'amber', '2026-01-31'],
     ['Liasse fiscale — Dossier H. Khadija', 'Télétransmission DGFiP en attente', 'blue', '2026-02-15'],
     ['OCR — 12 factures en attente', 'Reconnaissance automatique disponible', 'green', null],
-    ['Déclaration CVAE 2026', 'Formulaire 1329-DEF à déposer', 'amber', '2026-05-02'],
+    ['Cotisation Minimale 2026', 'CM : 0,5% du CA brut', 'amber', '2026-05-02'],
   ];
   for (const a of alerts) {
     d.run("INSERT INTO alerts (id, tenant_id, title, description, urgency, due_date) VALUES (?,?,?,?,?,?)", [uuid(), TENANT, ...a]);
