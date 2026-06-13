@@ -79,7 +79,7 @@ const KEYWORDS = {
   'credit impot': ['credit', 'crédit', 'crédito', 'tax credit', 'r&d', 'recherche', 'i+d', 'research'],
   perte: ['perte', 'déficit', 'deficit', 'loss', 'déficitaire', 'deficitario', 'resultat négatif', 'resultado negativo', 'negative result', 'bénéfice 0', 'pas de bénéfice', 'pas de chiffre'],
   resultat: ['résultat', 'resultat', 'resultado', 'result', 'fiscal', 'taxable income', 'bénéfice', 'beneficio', 'profit'],
-  seuil: ['seuil', 'seuil', 'threshold', 'micro-entrepris', 'micro entrepris', 'microempres', 'franchise'], ['perte', 'déficit', 'deficit', 'loss', 'déficitaire', 'deficitario', 'resultat négatif', 'resultado negativo', 'negative result', 'bénéfice 0', 'pas de bénéfice', 'pas de chiffre'],
+  seuil: ['seuil', 'seuil', 'threshold', 'micro-entrepris', 'micro entrepris', 'microempres', 'franchise'],
 };
 
 router.post('/ask', async (req, res) => {
