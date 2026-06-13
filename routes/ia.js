@@ -68,18 +68,18 @@ const FALLBACKS = {
   },
 };
 const KEYWORDS = {
-  is: [' is ', ' impôt ', 'corporat', 'income tax', 'impuesto', 'impôt sur les sociétés'],
-  tva: [' tva ', ' vat ', ' iva ', 'value added tax', 'taxe sur la valeur'],
+  is: [' is ', ' impôt ', 'corporat', 'income tax', 'impuesto', 'impôt sur les sociétés', 'ضريبة الشركات', 'ضريبة', 'الضرائب'],
+  tva: [' tva ', ' vat ', ' iva ', 'value added tax', 'taxe sur la valeur', 'ضريبة القيمة المضافة', 'ض.ق.م.'],
   fec: [' fec ', 'fichier', 'écritures comptables', 'audit file'],
-  cet: [' cet ', 'cotisation minimale', 'cm '],
+  cet: [' cet ', 'cotisation minimale', 'cm ', 'الواجب الأدنى', 'الحد الأدنى'],
   cvae: [' cvae ', 'cotisation valeur ajoutée'],
   cfe: [' cfe ', 'patente', 'cotisation foncière', 'professional tax'],
   amort: ['amort', 'depreciat', 'amortización'],
   'plus-value': ['plus-value', 'plusvalue', 'capital gain', 'plusvalía'],
   'credit impot': ['credit', 'crédit', 'crédito', 'tax credit', 'r&d', 'recherche', 'i+d', 'research'],
-  perte: ['perte', 'déficit', 'deficit', 'loss', 'déficitaire', 'deficitario', 'resultat négatif', 'resultado negativo', 'negative result', 'bénéfice 0', 'pas de bénéfice', 'pas de chiffre'],
-  resultat: ['résultat', 'resultat', 'resultado', 'result', 'fiscal', 'taxable income', 'profit', 'déclaration', 'resultado contable'],
-  seuil: ['seuil', 'seuil', 'threshold', 'micro-entrepris', 'micro entrepris', 'microempres', 'franchise'],
+  perte: ['perte', 'déficit', 'deficit', 'loss', 'déficitaire', 'deficitario', 'resultat négatif', 'resultado negativo', 'negative result', 'bénéfice 0', 'pas de bénéfice', 'pas de chiffre', 'خسارة', 'عجز'],
+  resultat: ['résultat', 'resultat', 'resultado', 'result', 'fiscal', 'taxable income', 'profit', 'déclaration', 'resultado contable', 'نتيجة', 'نتائج'],
+  seuil: ['seuil', 'seuil', 'threshold', 'micro-entrepris', 'micro entrepris', 'microempres', 'franchise', 'حد', 'حدود', 'مقاولة صغرى'],
 };
 
 router.post('/ask', async (req, res) => {
@@ -89,7 +89,7 @@ router.post('/ask', async (req, res) => {
     fr: '❓ Posez-moi une question (IS, TVA, FEC, amortissement…).',
     en: '❓ Ask me about corporate tax, VAT, accounting, FEC…',
     es: '❓ Pregúnteme sobre IS, IVA, contabilidad, FEC…',
-    ar: '❓ اسألني عن الضرائب، ضريبة القيمة المضافة، المحاسبة…'
+    ar: '❓ اسألني عن الضرائب، ضريبة القيمة المضافة، المحاسبة، الخسارة…'
   };
   if (!question) return res.json({ answer: notFoundMsg[curLang] });
 
@@ -137,7 +137,7 @@ router.post('/ask', async (req, res) => {
   }
 
   // Fallback local
-  const q = ' ' + question.toLowerCase().replace(/[^a-z0-9à-ÿ ]/g, '') + ' ';
+  const q = ' ' + question.toLowerCase().replace(/[^a-z0-9à-ÿ؀-ۿݐ-ݿø ]/g, '') + ' ';
   const fb = FALLBACKS[curLang] || FALLBACKS.en;
   const unavailable = { fr:'Service IA momentanément indisponible. Veuillez réessayer.', en:'AI service temporarily unavailable. Please try again.', es:'Servicio de IA temporalmente no disponible. Intente de nuevo.', ar:'خدمة الذكاء الاصطناعي غير متاحة مؤقتًا. يرجى المحاولة مرة أخرى.' };
   let answer = unavailable[curLang] || unavailable.fr;
