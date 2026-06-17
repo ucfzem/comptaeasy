@@ -1599,9 +1599,11 @@ async function handleOCRFile(files) {
 }
 
 // ====== VISION OCR VIA ANTHROPIC DIRECT ======
-async function callVisionDirect(base64Image) {
+async function callVisionDirect(base64Content, mediaType) {
+  mediaType = mediaType || 'image/jpeg';
+  const isDoc = mediaType === 'application/pdf';
   const apiKey = localStorage.getItem('ce_claude_key');
-  _ocrLog('callVisionDirect: clé=' + (apiKey ? apiKey.slice(0,8) + '…' : 'manquante'));
+  _ocrLog('callVisionDirect: clé=' + (apiKey ? apiKey.slice(0,8) + '…' : 'manquante') + ' type=' + mediaType);
   if (!apiKey) throw new Error('Clé API Anthropic manquante — ajoutez-la via 🔑');
 
   const VISION_PROMPT = 'Tu es un OCR comptable. Extrais les données de cette facture et réponds UNIQUEMENT en JSON valide, sans backticks ni explication, avec exactement ces clés:\n{\n  "supplier": "nom du fournisseur ou émetteur",\n  "invoice_no": "numéro de facture",\n  "date": "JJ/MM/AAAA",\n  "montant_ht": 0.00,\n  "tva": 0.00,\n  "montant_ttc": 0.00,\n  "account": "601100",\n  "account_label": "Achats matières"\n}\nSi une valeur est absente, utilise null pour les nombres et "—" pour les textes.\nPour le compte comptable, déduis-le du type de prestation (loyer→613200, honoraires→622700, télécom→626000, publicité→623000, fournitures→601100, transport→624100).';
@@ -1623,7 +1625,9 @@ async function callVisionDirect(base64Image) {
         messages: [{
           role: 'user',
           content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Image } },
+            isDoc
+              ? { type: 'document', source: { type: 'base64', media_type: mediaType, data: base64Content } }
+              : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Content } },
             { type: 'text', text: "Extrais les données de cette facture au format JSON indiqué." }
           ]
         }]
@@ -1749,22 +1753,10 @@ async function runOCR() {
         if (!apiKey) throw new Error('PDF non extractible et aucune clé API. Ajoutez une clé Anthropic via 🔑.');
         setOCRStatus(status, '⟳ Analyse visuelle en cours…');
         setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Texte introuvable — analyse visuelle…</div>');
-        _ocrLog('rendu PDF en image…');
-        const pdfData = await file.arrayBuffer();
-        let base64 = null;
-        try {
-          base64 = await renderPDFtoBase64(pdfData);
-        } catch (renderErr) {
-          _ocrLog('rendu échec: ' + renderErr.message + ' → tentative brute');
-          try {
-            base64 = await base64FromFile(file);
-          } catch (bfErr) {
-            throw new Error('Impossible de lire ce fichier (corrompu ou format non supporté)');
-          }
-        }
-        _ocrLog('envoi Vision…');
+        _ocrLog('envoi brut PDF à l\'IA…');
         setOCRStatus(status, '☁ Envoi à l\'IA Vision…');
-        data = await callVisionDirect(base64);
+        const rawBase64 = await base64FromFile(file);
+        data = await callVisionDirect(rawBase64, 'application/pdf');
       }
       if (extractedText) {
         data = parseOCRText(extractedText);
