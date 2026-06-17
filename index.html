@@ -908,8 +908,6 @@ const i18n = {
   }
 };
 let currentLang='fr',darkMode=!0,notifsOpen=!1;
-let CLAUDE_KEY = localStorage.getItem('ce_claude_key') || '';
-let GEMINI_KEY = localStorage.getItem('ce_gemini_key') || '';
 
 function applyLang(lang){
   const d=i18n[lang]; if(!d)return;
@@ -1965,13 +1963,68 @@ function renameCabinet() {
   if (name && name.trim()) el.textContent = name.trim();
 }
 
-// ====== API KEY CONFIGURATION ======
+// ====== API KEY CONFIGURATION (localStorage only, never in source) ======
 function configureAPI() {
-  const anthropic = prompt('🔑 Clé API Anthropic (Claude) pour la Vision OCR :', CLAUDE_KEY || '');
-  if (anthropic !== null) { CLAUDE_KEY = anthropic.trim(); localStorage.setItem('ce_claude_key', CLAUDE_KEY); }
-  const gemini = prompt('🤖 Clé API Gemini pour l\'assistant fiscal :', GEMINI_KEY || '');
-  if (gemini !== null) { GEMINI_KEY = gemini.trim(); localStorage.setItem('ce_gemini_key', GEMINI_KEY); }
-  showToast(anthropic || gemini ? '✅ Clés API sauvegardées' : '⚠️ Aucune clé modifiée');
+  if (document.getElementById('api-key-modal')) return;
+  const mask = v => v ? '•'.repeat(Math.min(v.length, 24)) : '';
+  const hasC = !!localStorage.getItem('ce_claude_key');
+  const hasG = !!localStorage.getItem('ce_gemini_key');
+  const modal = document.createElement('div');
+  modal.id = 'api-key-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-family:var(--font-ui)';
+  modal.innerHTML = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.5)">'
+    + '<div style="font-size:16px;font-weight:700;margin-bottom:4px">🔑 Clés API</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:20px">Stockées dans votre navigateur (localStorage). Jamais dans le code source.</div>'
+    + '<div style="margin-bottom:16px">'
+    + '<div style="font-size:12px;font-weight:600;margin-bottom:6px">🔴 Claude (Anthropic)</div>'
+    + '<div style="display:flex;gap:6px"><input id="key-claude" type="password" style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text-primary);font-size:12px;font-family:var(--font-data)" placeholder="sk-ant-..." value="' + (hasC ? 'placeholder' : '') + '">'
+    + '<button class="tk-toggle" data-target="key-claude" style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 10px;cursor:pointer;font-size:13px">👁</button></div>'
+    + '<div id="ck-status" style="font-size:11px;margin-top:4px;color:' + (hasC ? 'var(--green)' : 'var(--text-muted)') + '">' + (hasC ? '✅ Token présent' : '⏳ Aucun token') + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:20px">'
+    + '<div style="font-size:12px;font-weight:600;margin-bottom:6px">🟢 Gemini (Google)</div>'
+    + '<div style="display:flex;gap:6px"><input id="key-gemini" type="password" style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text-primary);font-size:12px;font-family:var(--font-data)" placeholder="AIza..." value="' + (hasG ? 'placeholder' : '') + '">'
+    + '<button class="tk-toggle" data-target="key-gemini" style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 10px;cursor:pointer;font-size:13px">👁</button></div>'
+    + '<div id="gk-status" style="font-size:11px;margin-top:4px;color:' + (hasG ? 'var(--green)' : 'var(--text-muted)') + '">' + (hasG ? '✅ Token présent' : '⏳ Aucun token') + '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end">'
+    + '<button id="key-save" style="background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer">💾 Enregistrer</button>'
+    + '<button id="key-clear" style="background:var(--red-dim);color:var(--red);border:none;border-radius:var(--radius-sm);padding:8px 18px;font-size:12px;font-weight:600;cursor:pointer">🗑️ Effacer</button>'
+    + '<button id="key-close" style="background:var(--bg-input);color:var(--text-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 18px;font-size:12px;cursor:pointer">Fermer</button>'
+    + '</div></div>';
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  modal.querySelector('#key-close').onclick = () => modal.remove();
+  modal.querySelector('#key-save').onclick = () => {
+    const c = modal.querySelector('#key-claude').value.trim();
+    const g = modal.querySelector('#key-gemini').value.trim();
+    if (c && c !== 'placeholder') { localStorage.setItem('ce_claude_key', c); }
+    if (g && g !== 'placeholder') { localStorage.setItem('ce_gemini_key', g); }
+    c && g ? showToast('✅ Clés API sauvegardées') : (c || g) ? showToast('✅ Clé sauvegardée') : showToast('⚠️ Aucune clé modifiée');
+    modal.remove();
+  };
+  modal.querySelector('#key-clear').onclick = () => {
+    localStorage.removeItem('ce_claude_key');
+    localStorage.removeItem('ce_gemini_key');
+    showToast('🗑️ Clés API effacées');
+    modal.remove();
+  };
+  modal.querySelectorAll('.tk-toggle').forEach(btn => {
+    btn.onclick = () => {
+      const inp = document.getElementById(btn.dataset.target);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+      btn.textContent = inp.type === 'password' ? '👁' : '🙈';
+    };
+  });
+  // Restore actual values into masked inputs without exposing in HTML
+  setTimeout(() => {
+    const ck = localStorage.getItem('ce_claude_key');
+    const gk = localStorage.getItem('ce_gemini_key');
+    const ci = modal.querySelector('#key-claude');
+    const gi = modal.querySelector('#key-gemini');
+    if (ck) { ci.value = ck; ci.dataset.saved = '1'; }
+    if (gk) { gi.value = gk; gi.dataset.saved = '1'; }
+  }, 0);
 }
 function showToast(msg) {
   let t = document.getElementById('toast-msg');
