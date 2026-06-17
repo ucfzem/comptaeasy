@@ -1423,11 +1423,6 @@ function base64FromFile(file) {
   });
 }
 
-function updateOCRProgress(percent, message) {
-  const status = document.getElementById('ocr-status');
-  const result = document.getElementById('ocr-result');
-  if (status) { status.textContent = '⟳ ' + percent + '%'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
-  if (result) { result.innerHTML = '<div style="text-align:center;color:var(--text-muted)"><div style="font-size:20px;margin-bottom:8px">⟳</div><div>' + message + '</div><div style="margin-top:8px;background:var(--bg-input);height:4px;border-radius:2px;width:200px;margin-left:auto;margin-right:auto"><div style="width:' + percent + '%;height:100%;background:var(--accent);border-radius:2px;transition:width 0.3s"></div></div></div>'; }
 }
 
 function parseOCRText(text) {
@@ -1604,30 +1599,6 @@ async function handleOCRFile(files) {
   if (resultEl) { resultEl.style.textAlign = 'center'; resultEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Cliquez sur <strong style="color:var(--accent)">Analyser la facture</strong> pour lancer l\'OCR</span>'; }
 }
 
-// ====== TESSERACT.js LOCAL FALLBACK ======
-let tesseractWorker = null;
-async function getTesseractWorker() {
-  if (tesseractWorker) return tesseractWorker;
-  if (typeof Tesseract === 'undefined') {
-    await new Promise((resolve, reject) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      s.onload = resolve; s.onerror = () => reject(new Error('Tesseract.js non chargé'));
-      document.head.appendChild(s);
-    });
-  }
-  tesseractWorker = await Tesseract.createWorker('fra', 1, {
-    logger: m => { if (m.status === 'recognizing text') updateOCRProgress(Math.round(m.progress * 100), 'OCR local...'); }
-  });
-  return tesseractWorker;
-}
-
-async function localImageOCR(file) {
-  const worker = await getTesseractWorker();
-  const { data: { text } } = await worker.recognize(file);
-  return text;
-}
-
 // ====== VISION OCR VIA BACKEND PROXY ======
 async function callVisionProxy(base64, mediaType) {
   const apiBase = window.COMPTAEASY_API || '';
@@ -1646,13 +1617,7 @@ async function callVisionProxy(base64, mediaType) {
 
 async function runVisionOCR(file) {
   const base64 = await base64FromFile(file);
-  try {
-    return await callVisionProxy(base64, file.type || 'image/jpeg');
-  } catch (apiError) {
-    console.warn('API Vision indisponible, fallback Tesseract local:', apiError.message);
-    const text = await localImageOCR(file);
-    return parseOCRText(text);
-  }
+  return await callVisionProxy(base64, file.type || 'image/jpeg');
 }
 
 // ====== PDF.js DYNAMIC LOAD ======
@@ -2065,10 +2030,6 @@ function cleanupOCRResources() {
   if (window._ocrFiles) {
     window._ocrFiles.forEach(f => { if (f._url) { URL.revokeObjectURL(f._url); } });
     window._ocrFiles = null;
-  }
-  if (window._tesseractWorker) {
-    try { window._tesseractWorker.terminate(); } catch(_) {}
-    window._tesseractWorker = null;
   }
 }
 window.addEventListener('beforeunload', cleanupOCRResources);
