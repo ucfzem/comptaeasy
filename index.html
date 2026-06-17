@@ -1013,18 +1013,16 @@ const views = {
 
 const SECTION_HTML = {
   saisie: `
-<div class="dual-panel">
+<div class="dual-panel" style="grid-template-columns:1fr">
   <div class="card">
     <div class="card-header"><div class="card-title">📄 Import de Factures</div><div class="card-badge">OCR Actif</div></div>
-    <div style="padding:30px 20px;text-align:center">
+    <div style="padding:30px 20px;text-align:center;position:relative">
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="position:absolute;left:0;top:0;width:1px;height:1px;opacity:0;pointer-events:none">
       <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:50px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition)" id="dropzone">
         <svg width="36" height="36" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.2"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg>
         <p style="margin-top:14px;color:var(--text-secondary);font-size:13px">Déposez vos fichiers ici (PDF, JPG, PNG)</p>
         <p style="color:var(--text-muted);font-size:11px;margin-top:4px">ou</p>
-        <label style="display:inline-block;padding:10px 24px;background:var(--accent);color:white;border-radius:var(--radius-md);cursor:pointer;font-weight:600;font-size:13px;border:none;margin-top:4px;position:relative">
-          Parcourir
-          <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer">
-        </label>
+        <span style="display:inline-block;padding:10px 24px;background:var(--accent);color:white;border-radius:var(--radius-md);cursor:pointer;font-weight:600;font-size:13px;border:none;margin-top:4px" id="browse-btn">Parcourir</span>
       </div>
     <div style="padding:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
       <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FAC-2026-0847.pdf</span>
@@ -1262,21 +1260,44 @@ function handleOCRFile(files) {
   const file = files[0];
   const status = document.getElementById('ocr-status');
   const result = document.getElementById('ocr-result');
+  const isImage = file.type.startsWith('image/');
+  const previewUrl = isImage ? URL.createObjectURL(file) : null;
   status.textContent = 'Analyse en cours…';
   status.style.background = 'var(--amber-dim)';
   status.style.color = 'var(--amber)';
-  result.innerHTML = '<span style="color:var(--text-muted);font-style:italic">⟳ Reconnaissance en cours…</span>';
+  result.innerHTML = `
+    <div style="text-align:start">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md);margin-bottom:10px">
+        <span style="font-size:24px">${isImage ? '🖼' : '📄'}</span>
+        <div style="flex:1;overflow:hidden">
+          <div style="color:var(--text-primary);font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${file.name}</div>
+          <div style="color:var(--text-muted);font-size:11px">${(file.size / 1024).toFixed(1)} Ko</div>
+        </div>
+        <span style="color:var(--text-muted);font-style:italic;font-size:12px">⟳ Analyse…</span>
+      </div>
+      ${previewUrl ? `<img src="${previewUrl}" style="max-width:100%;max-height:160px;border-radius:var(--radius-md);display:block;margin:0 auto">` : ''}
+    </div>`;
   if (typeof window.CE?.analyzeOCR !== 'function') {
-    setTimeout(() => simulateOCR(), 100);
+    setTimeout(() => { URL.revokeObjectURL(previewUrl); simulateOCR(); }, 800);
     return;
   }
   window.CE.analyzeOCR(file).then(data => {
+    URL.revokeObjectURL(previewUrl);
     if (data.success) {
       status.textContent = 'Terminé';
       status.style.background = 'var(--green-dim)';
       status.style.color = 'var(--green)';
       result.innerHTML = `
         <div style="text-align:start">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md);margin-bottom:10px">
+            <span style="font-size:24px">${isImage ? '🖼' : '📄'}</span>
+            <div style="flex:1;overflow:hidden">
+              <div style="color:var(--text-primary);font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${file.name}</div>
+              <div style="color:var(--text-muted);font-size:11px">${(file.size / 1024).toFixed(1)} Ko</div>
+            </div>
+            <span class="status-pill validated" style="font-size:11px">${data.confidence || 97}%</span>
+          </div>
+          ${previewUrl ? `<img src="${previewUrl}" style="max-width:100%;max-height:160px;border-radius:var(--radius-md);display:block;margin:0 auto 10px">` : ''}
           <div style="display:grid;gap:10px">
             <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Fournisseur</span><div style="color:var(--text-primary);font-weight:500">${data.data.supplier}</div></div>
             <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Montant TTC</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">${data.data.montant_ttc.toLocaleString('fr-FR')} €</div></div>
@@ -1288,6 +1309,7 @@ function handleOCRFile(files) {
       throw new Error(data.error || 'Échec de l\'analyse OCR');
     }
   }).catch(err => {
+    URL.revokeObjectURL(previewUrl);
     status.textContent = 'Erreur';
     status.style.background = 'var(--red-dim)';
     status.style.color = 'var(--red)';
@@ -1298,18 +1320,28 @@ function handleOCRFile(files) {
 function initOCRUpload() {
   const dropzone = document.getElementById('dropzone');
   const fileInput = document.getElementById('file-input');
+  const browseBtn = document.getElementById('browse-btn');
   if (!dropzone || !fileInput) return;
-  dropzone.addEventListener('click', () => fileInput.click());
+  function openPicker(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    fileInput.click();
+  }
+  dropzone.addEventListener('click', openPicker);
+  if (browseBtn) browseBtn.addEventListener('click', openPicker);
   dropzone.addEventListener('dragover', e => {
     e.preventDefault();
     dropzone.style.borderColor = 'var(--accent)';
+    dropzone.style.background = 'var(--accent-glow)';
   });
   dropzone.addEventListener('dragleave', () => {
     dropzone.style.borderColor = 'var(--border)';
+    dropzone.style.background = 'var(--bg-input)';
   });
   dropzone.addEventListener('drop', e => {
     e.preventDefault();
     dropzone.style.borderColor = 'var(--border)';
+    dropzone.style.background = 'var(--bg-input)';
     handleOCRFile(e.dataTransfer.files);
   });
   fileInput.addEventListener('change', () => {
