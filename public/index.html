@@ -1744,16 +1744,25 @@ async function runOCR() {
         const pdfData = await file.arrayBuffer();
         extractedText = await extractTextFromPDF(pdfData);
       } catch (pdfErr) {
-        const isScanned = pdfErr.message === 'PDF_SCANNED' || pdfErr.message === 'PDF extraction timeout';
-        console.warn('PDF extraction issue:', isScanned ? pdfErr.message : pdfErr);
-        _ocrLog('extraction échec: ' + pdfErr.message);
-        if (!apiKey) throw new Error('PDF sans texte extractible et aucune clé API pour la reconnaissance visuelle. Ajoutez une clé Anthropic via 🔑.');
+        console.warn('PDF extraction error:', pdfErr.message);
+        _ocrLog('extraction échec: ' + pdfErr.message + ' → tentative Vision');
+        if (!apiKey) throw new Error('PDF non extractible et aucune clé API. Ajoutez une clé Anthropic via 🔑.');
         setOCRStatus(status, '⟳ Analyse visuelle en cours…');
         setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Texte introuvable — analyse visuelle…</div>');
         _ocrLog('rendu PDF en image…');
         const pdfData = await file.arrayBuffer();
-        const base64 = await renderPDFtoBase64(pdfData);
-        _ocrLog('rendu OK, envoi Vision…');
+        let base64 = null;
+        try {
+          base64 = await renderPDFtoBase64(pdfData);
+        } catch (renderErr) {
+          _ocrLog('rendu échec: ' + renderErr.message + ' → tentative brute');
+          try {
+            base64 = await base64FromFile(file);
+          } catch (bfErr) {
+            throw new Error('Impossible de lire ce fichier (corrompu ou format non supporté)');
+          }
+        }
+        _ocrLog('envoi Vision…');
         setOCRStatus(status, '☁ Envoi à l\'IA Vision…');
         data = await callVisionDirect(base64);
       }
