@@ -1674,8 +1674,8 @@ function loadPDFJS() {
 
 // ====== PDF TEXT EXTRACTION via PDF.js (with timeout) ======
 async function extractTextFromPDF(pdfData, timeoutMs = 20000) {
-  if (typeof pdfjsLib === 'undefined') await loadPDFJS();
   const extraction = (async () => {
+    if (typeof pdfjsLib === 'undefined') await loadPDFJS();
     const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
     let fullText = '';
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -1777,58 +1777,64 @@ async function runOCR() {
 
 // ====== PDF PAGE → IMAGE (returns base64) ======
 async function renderPDFtoBase64(pdfData) {
-  if (typeof pdfjsLib === 'undefined') await loadPDFJS();
-  const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-  const PAGE_SCALE = 2.5;
-  const MAX_W = 2000;
-  const MAX_H_PER_PAGE = 3000;
+  const render = (async () => {
+    if (typeof pdfjsLib === 'undefined') await loadPDFJS();
+    const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+    const PAGE_SCALE = 2.5;
+    const MAX_W = 2000;
+    const MAX_H_PER_PAGE = 3000;
 
-  const pages = [];
-  let totalH = 0;
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    let vp = page.getViewport({ scale: PAGE_SCALE });
-    if (vp.width > MAX_W) {
-      vp = page.getViewport({ scale: PAGE_SCALE * (MAX_W / vp.width) });
+    const pages = [];
+    let totalH = 0;
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      let vp = page.getViewport({ scale: PAGE_SCALE });
+      if (vp.width > MAX_W) {
+        vp = page.getViewport({ scale: PAGE_SCALE * (MAX_W / vp.width) });
+      }
+      if (vp.height > MAX_H_PER_PAGE) {
+        vp = page.getViewport({ scale: vp.scale * (MAX_H_PER_PAGE / vp.height) });
+      }
+      pages.push({ page, vp });
+      totalH += vp.height;
     }
-    if (vp.height > MAX_H_PER_PAGE) {
-      vp = page.getViewport({ scale: vp.scale * (MAX_H_PER_PAGE / vp.height) });
+
+    const maxW = Math.max(...pages.map(p => p.vp.width));
+    const canvas = document.createElement('canvas');
+    canvas.width = maxW;
+    canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    let y = 0;
+    let rendered = 0;
+    for (const { page, vp } of pages) {
+      try {
+        const pgCanvas = document.createElement('canvas');
+        pgCanvas.width = vp.width;
+        pgCanvas.height = vp.height;
+        const pgCtx = pgCanvas.getContext('2d');
+        pgCtx.fillStyle = 'white';
+        pgCtx.fillRect(0, 0, vp.width, vp.height);
+        await page.render({ canvasContext: pgCtx, viewport: vp }).promise;
+        ctx.drawImage(pgCanvas, 0, y);
+        y += vp.height;
+        rendered++;
+      } catch (e) {
+        console.warn('PDF page ' + (rendered + 1) + ' render skipped:', e.message);
+      }
     }
-    pages.push({ page, vp });
-    totalH += vp.height;
-  }
+    if (rendered === 0) throw new Error('Impossible de rendre aucune page du PDF');
 
-  const maxW = Math.max(...pages.map(p => p.vp.width));
-  const canvas = document.createElement('canvas');
-  canvas.width = maxW;
-  canvas.height = totalH;
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = 'white';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  let y = 0;
-  let rendered = 0;
-  for (const { page, vp } of pages) {
-    try {
-      const pgCanvas = document.createElement('canvas');
-      pgCanvas.width = vp.width;
-      pgCanvas.height = vp.height;
-      const pgCtx = pgCanvas.getContext('2d');
-      pgCtx.fillStyle = 'white';
-      pgCtx.fillRect(0, 0, vp.width, vp.height);
-      await page.render({ canvasContext: pgCtx, viewport: vp }).promise;
-      ctx.drawImage(pgCanvas, 0, y);
-      y += vp.height;
-      rendered++;
-    } catch (e) {
-      console.warn('PDF page ' + (rendered + 1) + ' render skipped:', e.message);
-    }
-  }
-  if (rendered === 0) throw new Error('Impossible de rendre aucune page du PDF');
-
-  const maxDim = Math.max(maxW, totalH);
-  const jpegQuality = maxDim > 3000 ? 0.7 : 0.85;
-  return canvas.toDataURL('image/jpeg', jpegQuality).split(',')[1];
+    const maxDim = Math.max(maxW, totalH);
+    const jpegQuality = maxDim > 3000 ? 0.7 : 0.85;
+    return canvas.toDataURL('image/jpeg', jpegQuality).split(',')[1];
+  })();
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Rendu PDF timeout')), 20000)
+  );
+  return Promise.race([render, timeout]);
 }
 
 // ====== SIMULATE OCR ======
