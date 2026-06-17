@@ -1972,9 +1972,23 @@ function configureAPI() {
   const modal = document.createElement('div');
   modal.id = 'api-key-modal';
   modal.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;font-family:var(--font-ui)';
-  modal.innerHTML = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.5)">'
+   modal.innerHTML = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;width:420px;max-width:92vw;box-shadow:0 20px 60px rgba(0,0,0,0.5)">'
     + '<div style="font-size:16px;font-weight:700;margin-bottom:4px">🔑 Clés API</div>'
-    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:20px">Stockées dans votre navigateur (localStorage). Jamais dans le code source.</div>'
+    + '<div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Stockées dans votre navigateur (localStorage). Jamais dans le code source.</div>'
+    // Help section (collapsible)
+    + '<div style="margin-bottom:14px;font-size:11px">'
+    + '<div id="key-help-toggle" style="cursor:pointer;color:var(--accent);font-weight:500">❓ Besoin d\'aide pour obtenir vos clés ?</div>'
+    + '<div id="key-help-content" style="display:none;margin-top:8px;padding:12px;background:var(--bg-input);border-radius:var(--radius-md);line-height:1.7;color:var(--text-secondary)">'
+    + '<strong>🔴 Claude (Anthropic) — pour la Vision OCR</strong><br>'
+    + '1. Allez sur <a href="https://console.anthropic.com/" target="_blank" style="color:var(--accent)">console.anthropic.com</a><br>'
+    + '2. Créez un compte → <strong>API Keys</strong><br>'
+    + '3. Cliquez <strong>Create Key</strong> → copiez la clé (sk-ant-...)<br><br>'
+    + '<strong>🟢 Gemini (Google) — pour l\'assistant fiscal</strong><br>'
+    + '1. Allez sur <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--accent)">aistudio.google.com/apikey</a><br>'
+    + '2. Cliquez <strong>Create API Key</strong><br>'
+    + '3. Copiez la clé (AIza... ou AQ...)<br><br>'
+    + '<strong>📌 Collez votre clé dans le champ ci-dessus</strong> → 💾 Enregistrer'
+    + '</div></div>'
     + '<div style="margin-bottom:16px">'
     + '<div style="font-size:12px;font-weight:600;margin-bottom:6px">🔴 Claude (Anthropic)</div>'
     + '<div style="display:flex;gap:6px"><input id="key-claude" type="password" style="flex:1;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text-primary);font-size:12px;font-family:var(--font-data)" placeholder="sk-ant-... ou sk-or-..." value="' + (hasC ? 'placeholder' : '') + '">'
@@ -2016,6 +2030,13 @@ function configureAPI() {
       btn.textContent = inp.type === 'password' ? '👁' : '🙈';
     };
   });
+  modal.querySelector('#key-help-toggle').onclick = () => {
+    const c = modal.querySelector('#key-help-content');
+    const t = modal.querySelector('#key-help-toggle');
+    const isOpen = c.style.display === 'block';
+    c.style.display = isOpen ? 'none' : 'block';
+    t.textContent = isOpen ? '❓ Besoin d\'aide pour obtenir vos clés ?' : '❓ Masquer l\'aide';
+  };
   // Restore actual values into masked inputs without exposing in HTML
   setTimeout(() => {
     const ck = localStorage.getItem('ce_claude_key');
