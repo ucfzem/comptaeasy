@@ -1597,30 +1597,49 @@ async function handleOCRFile(files) {
   if (resultEl) { resultEl.style.textAlign = 'center'; resultEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Cliquez sur <strong style="color:var(--accent)">Analyser la facture</strong> pour lancer l\'OCR</span>'; }
 }
 
-// ====== VISION OCR VIA BACKEND PROXY ======
-async function callVisionProxy(base64, mediaType) {
-  const apiBase = window.COMPTAEASY_API || '';
-  const userKey = localStorage.getItem('ce_gemini_key') || '';
+// ====== VISION OCR VIA ANTHROPIC DIRECT ======
+async function callVisionDirect(base64Image) {
+  const apiKey = localStorage.getItem('ce_claude_key');
+  if (!apiKey) throw new Error('Clé API Anthropic manquante — ajoutez-la via 🔑');
+
+  const VISION_PROMPT = 'Tu es un OCR comptable. Extrais les données de cette facture et réponds UNIQUEMENT en JSON valide, sans backticks ni explication, avec exactement ces clés:\n{\n  "supplier": "nom du fournisseur ou émetteur",\n  "invoice_no": "numéro de facture",\n  "date": "JJ/MM/AAAA",\n  "montant_ht": 0.00,\n  "tva": 0.00,\n  "montant_ttc": 0.00,\n  "account": "601100",\n  "account_label": "Achats matières"\n}\nSi une valeur est absente, utilise null pour les nombres et "—" pour les textes.\nPour le compte comptable, déduis-le du type de prestation (loyer→613200, honoraires→622700, télécom→626000, publicité→623000, fournitures→601100, transport→624100).';
+
   const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 20000);
-  const resp = await fetch(apiBase + '/api/ocr/vision', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      image: base64,
-      media_type: mediaType || 'image/jpeg',
-      user_key: userKey
-    }),
-    signal: ctrl.signal
-  });
-  clearTimeout(tid);
-  if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error || 'HTTP ' + resp.status); }
-  return resp.json();
+  const tid = setTimeout(() => ctrl.abort(), 45000);
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 1024,
+        system: VISION_PROMPT,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64Image } },
+            { type: 'text', text: "Extrais les données de cette facture au format JSON indiqué." }
+          ]
+        }]
+      }),
+      signal: ctrl.signal
+    });
+    clearTimeout(tid);
+    if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${resp.status}`); }
+    const json = await resp.json();
+    const text = json.content?.map(c => c.text).filter(Boolean).join('') || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  } finally { clearTimeout(tid); }
 }
 
 async function runVisionOCR(file) {
   const base64 = await base64FromFile(file);
-  return await callVisionProxy(base64, file.type || 'image/jpeg');
+  return await callVisionDirect(base64);
 }
 
 // ====== PDF.js DYNAMIC LOAD ======
@@ -1653,33 +1672,40 @@ function loadPDFJS() {
   });
 }
 
-// ====== PDF TEXT EXTRACTION via PDF.js ======
-function extractTextFromPDF(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      try {
-        if (typeof pdfjsLib === 'undefined') await loadPDFJS();
-        const buffer = e.target.result;
-        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-        const pages = [];
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const tc = await page.getTextContent();
-          const text = tc.items.map(it => it.str).join(' ');
-          pages.push(text);
-        }
-        const fullText = pages.join('\n');
-        if (!fullText.trim()) { reject(new Error('PDF_SCANNED')); return; }
-        resolve(fullText);
-      } catch(err) { reject(err); }
-    };
-    reader.onerror = () => reject(new Error('Impossible de lire le fichier PDF'));
-    reader.readAsArrayBuffer(file);
-  });
+// ====== PDF TEXT EXTRACTION via PDF.js (with timeout) ======
+async function extractTextFromPDF(pdfData, timeoutMs = 20000) {
+  if (typeof pdfjsLib === 'undefined') await loadPDFJS();
+  const extraction = (async () => {
+    const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const tc = await page.getTextContent();
+      fullText += tc.items.map(it => it.str).join(' ') + '\n';
+    }
+    const trimmed = fullText.trim();
+    if (!trimmed) throw new Error('PDF_SCANNED');
+    return trimmed;
+  })();
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('PDF extraction timeout')), timeoutMs)
+  );
+  return Promise.race([extraction, timeout]);
 }
 
 // ====== RUN OCR ======
+function setOCRStatus(el, msg, bg, fg) {
+  if (!el) return;
+  el.textContent = msg;
+  el.style.background = bg || 'var(--amber-dim)';
+  el.style.color = fg || 'var(--amber)';
+}
+function setOCRResult(el, html) {
+  if (!el) return;
+  el.style.textAlign = 'center';
+  el.innerHTML = html;
+}
+
 async function runOCR() {
   const files = window._ocrFiles;
   const status = document.getElementById('ocr-status');
@@ -1687,74 +1713,122 @@ async function runOCR() {
   if (!files || files.length === 0) { simulateOCR(); return; }
   const file = files[0];
   const cat = getFileCategory(file);
-  if (status) { status.textContent = '⟳ Analyse…'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
-  if (result) { result.style.textAlign = 'center'; result.innerHTML = '<div style="color:var(--text-muted);font-size:12px"><div style="font-size:24px;margin-bottom:8px">⟳</div>' + (cat === 'pdf' ? 'Extraction du texte PDF…' : 'Vision IA en cours…') + '</div>'; }
+
+  setOCRStatus(status, '⟳ Chargement du PDF…');
+  setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px"><div style="font-size:24px;margin-bottom:8px">⟳</div>Préparation…</div>');
+
+  const apiKey = localStorage.getItem('ce_claude_key');
+  if (!apiKey && cat !== 'pdf') {
+    setOCRStatus(status, '❌ Clé API manquante', 'var(--red-dim)', 'var(--red)');
+    setOCRResult(result, '<div style="padding:20px;color:var(--text-muted);font-size:12px"><div style="font-size:28px;margin-bottom:8px;opacity:0.5">🔑</div><strong style="color:var(--red)">Aucune clé API trouvée.</strong><br><br>Ajoutez votre clé Anthropic via le bouton 🔑 dans l\'en-tête pour utiliser la reconnaissance automatique.</div>');
+    return;
+  }
+
   try {
     let data;
     if (cat === 'pdf') {
+      let extractedText = '';
+      setOCRStatus(status, '⟳ Extraction du texte (max 20s)…');
+      setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:24px;margin-bottom:8px">⟳</div>Extraction du texte PDF…</div>');
       try {
-        const text = await extractTextFromPDF(file);
-        data = parseOCRText(text);
+        const pdfData = await file.arrayBuffer();
+        extractedText = await extractTextFromPDF(pdfData);
+      } catch (pdfErr) {
+        const isScanned = pdfErr.message === 'PDF_SCANNED' || pdfErr.message === 'PDF extraction timeout';
+        console.warn('PDF extraction issue:', isScanned ? pdfErr.message : pdfErr);
+        if (!apiKey) throw new Error('PDF sans texte extractible et aucune clé API pour la reconnaissance visuelle. Ajoutez une clé Anthropic via 🔑.');
+        setOCRStatus(status, '⟳ Analyse visuelle en cours…');
+        setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Texte introuvable — analyse visuelle…</div>');
+        const pdfData = await file.arrayBuffer();
+        const base64 = await renderPDFtoBase64(pdfData);
+        setOCRStatus(status, '☁ Envoi à l\'IA Vision…');
+        data = await callVisionDirect(base64);
+      }
+      if (extractedText) {
+        data = parseOCRText(extractedText);
         if (!data.montant_ttc) {
-          // Texte extrait mais non parsé → affichage brut
+          setOCRStatus(status, '⚠ Texte non parsé');
           if (result) {
             result.style.textAlign = 'left';
             result.innerHTML = '<div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">⚠ Texte extrait mais non reconnu automatiquement. Copiez les données manuellement :</div>'
               + '<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;font-family:var(--font-data);font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;color:var(--text-secondary)">'
-              + text.slice(0, 5000).replace(/</g,'&lt;') + '</div>'
+              + extractedText.slice(0, 5000).replace(/</g,'&lt;') + '</div>'
               + '<button onclick="var t=this.parentElement.querySelector(\'div\').textContent;navigator.clipboard.writeText(t).then(()=>showToast(\'✅ Texte copié\'))" style="margin-top:10px;padding:6px 14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:11px">📋 Copier le texte brut</button>';
           }
-          if (status) { status.textContent = '⚠ Texte non parsé'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
           return;
         }
-      } catch (err) {
-        if (err.message === 'PDF_SCANNED') {
-          if (result) result.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>PDF scanné — conversion en image…</div>';
-          data = await extractPDFPageAsImage(file);
-        } else { throw err; }
       }
     } else if (cat === 'image') {
+      setOCRStatus(status, '⟳ Vision IA en cours…');
+      setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:24px;margin-bottom:8px">⟳</div>Analyse de l\'image…</div>');
       data = await runVisionOCR(file);
     } else { throw new Error('Format non supporté'); }
     data.account = data.account || '601100';
     data.account_label = data.account_label || 'Achats matières';
+    setOCRStatus(status, '✓ Analyse terminée', 'var(--green-dim)', 'var(--green)');
     renderOCRResult(data, status, result);
   } catch (err) {
     console.warn('OCR error:', err.message);
-    if (status) { status.textContent = '❌ ' + err.message; status.style.background = 'var(--red-dim)'; status.style.color = 'var(--red)'; }
-    if (result) { result.style.textAlign = 'center'; result.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:12px"><div style="font-size:28px;margin-bottom:8px;opacity:0.5">⚠</div><strong style="color:var(--red)">' + err.message + '</strong><br><br>Utilisez les fichiers démo ci-dessous pour tester.</div>'; }
+    setOCRStatus(status, '❌ ' + err.message, 'var(--red-dim)', 'var(--red)');
+    setOCRResult(result, '<div style="padding:20px;color:var(--text-muted);font-size:12px"><div style="font-size:28px;margin-bottom:8px;opacity:0.5">⚠</div><strong style="color:var(--red)">' + err.message + '</strong><br><br>Utilisez les fichiers démo ci-dessous pour tester.</div>');
     simulateOCR();
   }
 }
 
-// ====== PDF PAGE → IMAGE → VISION ======
-async function extractPDFPageAsImage(file) {
+// ====== PDF PAGE → IMAGE (returns base64) ======
+async function renderPDFtoBase64(pdfData) {
   if (typeof pdfjsLib === 'undefined') await loadPDFJS();
-  const buffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-  const page = await pdf.getPage(1);
-  const scale = 1.5;
-  const vp = page.getViewport({ scale });
+  const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
+  const PAGE_SCALE = 2.5;
+  const MAX_W = 2000;
+  const MAX_H_PER_PAGE = 3000;
+
+  const pages = [];
+  let totalH = 0;
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    let vp = page.getViewport({ scale: PAGE_SCALE });
+    if (vp.width > MAX_W) {
+      vp = page.getViewport({ scale: PAGE_SCALE * (MAX_W / vp.width) });
+    }
+    if (vp.height > MAX_H_PER_PAGE) {
+      vp = page.getViewport({ scale: vp.scale * (MAX_H_PER_PAGE / vp.height) });
+    }
+    pages.push({ page, vp });
+    totalH += vp.height;
+  }
+
+  const maxW = Math.max(...pages.map(p => p.vp.width));
   const canvas = document.createElement('canvas');
-  canvas.width = Math.min(vp.width, 1600);
-  canvas.height = Math.min(vp.height, 2400);
+  canvas.width = maxW;
+  canvas.height = totalH;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = 'white';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  try {
-    await page.render({ canvasContext: ctx, viewport: vp }).promise;
-  } catch (renderErr) {
-    throw new Error('Échec rendu PDF: ' + renderErr.message);
+
+  let y = 0;
+  let rendered = 0;
+  for (const { page, vp } of pages) {
+    try {
+      const pgCanvas = document.createElement('canvas');
+      pgCanvas.width = vp.width;
+      pgCanvas.height = vp.height;
+      const pgCtx = pgCanvas.getContext('2d');
+      pgCtx.fillStyle = 'white';
+      pgCtx.fillRect(0, 0, vp.width, vp.height);
+      await page.render({ canvasContext: pgCtx, viewport: vp }).promise;
+      ctx.drawImage(pgCanvas, 0, y);
+      y += vp.height;
+      rendered++;
+    } catch (e) {
+      console.warn('PDF page ' + (rendered + 1) + ' render skipped:', e.message);
+    }
   }
-  const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-  const status = document.getElementById('ocr-status');
-  if (status) { status.textContent = '☁ Envoi à l\'IA Vision…'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
-  try {
-    return await callVisionProxy(base64, 'image/jpeg');
-  } catch (apiError) {
-    console.warn('Vision API failed for PDF:', apiError.message);
-    throw new Error('API Vision indisponible: ' + apiError.message);
-  }
+  if (rendered === 0) throw new Error('Impossible de rendre aucune page du PDF');
+
+  const maxDim = Math.max(maxW, totalH);
+  const jpegQuality = maxDim > 3000 ? 0.7 : 0.85;
+  return canvas.toDataURL('image/jpeg', jpegQuality).split(',')[1];
 }
 
 // ====== SIMULATE OCR ======
