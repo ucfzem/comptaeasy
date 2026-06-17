@@ -980,7 +980,7 @@ const SECTION_HTML = {
   <div class="card">
     <div class="card-header"><div class="card-title">📄 Import de Factures</div><div class="card-badge">OCR Actif</div></div>
     <div style="padding:30px 20px;text-align:center">
-      <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:50px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition)" id="dropzone" onclick="simulateOCR()" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:50px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition)" id="dropzone" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
         <svg width="36" height="36" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.2"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg>
         <p style="margin-top:14px;color:var(--text-secondary);font-size:13px">Déposez vos fichiers ici (PDF, JPG, PNG)</p>
         <p style="color:var(--text-muted);font-size:11px;margin-top:4px">12 factures en attente de traitement</p>
@@ -990,7 +990,7 @@ const SECTION_HTML = {
       <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FAC-2026-0847.pdf</span>
       <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FAC-2026-0839.jpg</span>
       <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FACTURE_MARTIN.pdf</span>
-      <span style="background:var(--accent-glow);border:1px solid var(--accent);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);cursor:pointer" onclick="simulateOCR()">+ Analyser tout</span>
+      <span style="background:var(--accent-glow);border:1px solid var(--accent);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);cursor:pointer" onclick="infoOCR()">+ En savoir plus</span>
     </div>
   </div>
   <div class="card">
@@ -1213,28 +1213,27 @@ function navigate(section, e) {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ====== SIMULATE OCR ======
-function simulateOCR() {
+// ====== INFO OCR ======
+function infoOCR() {
   const status = document.getElementById('ocr-status');
   const result = document.getElementById('ocr-result');
-  status.textContent = 'Analyse en cours…';
-  status.style.background = 'var(--amber-dim)';
-  status.style.color = 'var(--amber)';
-  result.innerHTML = '<span style="color:var(--text-muted);font-style:italic">⟳ Reconnaissance en cours…</span>';
-  setTimeout(() => {
-    status.textContent = 'Terminé';
-    status.style.background = 'var(--green-dim)';
-    status.style.color = 'var(--green)';
+  if (status) {
+    status.textContent = 'Information';
+    status.style.background = 'var(--amber-dim)';
+    status.style.color = 'var(--amber)';
+  }
+  if (result) {
     result.innerHTML = `
-      <div style="text-align:left">
-        <div style="display:grid;gap:10px">
-          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Fournisseur</span><div style="color:var(--text-primary);font-weight:500">K. Abdessalam</div></div>
-          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Montant TTC</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">1 500,00 €</div></div>
-          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">TVA</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">250,00 € (20%)</div></div>
-          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Compte suggéré</span><div><span style="color:var(--accent);font-weight:600;font-family:var(--font-data)">601100</span> <span style="color:var(--text-secondary)">— Achats matières</span></div></div>
-        </div>
+      <div style="text-align:center;padding:20px;color:var(--text-muted)">
+        <div style="font-size:32px;margin-bottom:12px">📄</div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Importez un PDF texturé (contenant du texte).</p>
+        <p style="font-size:12px;color:var(--text-muted);line-height:1.5">
+          Pour analyser vos factures, passez d'abord par une<br>
+          app gratuite comme <strong>Adobe Scan</strong> ou <strong>Text Fairy</strong><br>
+          puis importez le PDF obtenu.
+        </p>
       </div>`;
-  }, 1500);
+  }
 }
 
 // ====== ÉTATS FINANCIERS MODAL ======
