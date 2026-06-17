@@ -1017,10 +1017,11 @@ const SECTION_HTML = {
   <div class="card">
     <div class="card-header"><div class="card-title">📄 Import de Factures</div><div class="card-badge">OCR Actif</div></div>
     <div style="padding:30px 20px;text-align:center">
-      <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:50px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition)" id="dropzone" onclick="simulateOCR()" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple hidden>
+      <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:50px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition)" id="dropzone">
         <svg width="36" height="36" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.2"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg>
         <p style="margin-top:14px;color:var(--text-secondary);font-size:13px">Déposez vos fichiers ici (PDF, JPG, PNG)</p>
-        <p style="color:var(--text-muted);font-size:11px;margin-top:4px">12 factures en attente de traitement</p>
+        <p style="color:var(--text-muted);font-size:11px;margin-top:4px">Cliquez ou glissez-déposez pour importer</p>
       </div>
     </div>
     <div style="padding:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
@@ -1033,7 +1034,7 @@ const SECTION_HTML = {
   <div class="card">
     <div class="card-header"><div class="card-title">🔍 Résultat OCR</div><div class="card-badge" id="ocr-status">En attente</div></div>
     <div id="ocr-result" style="padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px">
-      Cliquez sur la zone de dépôt<br>pour simuler une analyse OCR
+      Importez un fichier (PDF, JPG, PNG)<br>pour lancer l'analyse OCR
     </div>
   </div>
 </div>
@@ -1243,6 +1244,7 @@ function navigate(section, e) {
       });
     }
     if (section === 'fiscalite') calcIS();
+    if (section === 'saisie') initOCRUpload();
   }
   // Update header title
   const titles = {saisie:'Saisie & OCR',clotures:'Clôture Annuelle',etats:'États Financiers',fiscalite:'Fiscalité',ged:'Portail GED',veille:'Veille Juridique'};
@@ -1250,6 +1252,68 @@ function navigate(section, e) {
   const ht = document.querySelector('.header-title');
   if (ht) ht.innerHTML = `<span class="logo-icon" style="width:28px;height:28px;font-size:13px;display:inline-flex;margin-inline-end:10px">CE</span><div><span style="font-size:15px;font-weight:600;color:var(--text-primary)">${titles[section]||'Dashboard'}</span><span style="font-size:12px;font-weight:400;color:var(--text-muted);display:block;margin-top:1px">${cabinetName} · Mode démo</span></div>`;
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ====== REAL OCR UPLOAD ======
+function handleOCRFile(files) {
+  if (!files || files.length === 0) return;
+  const file = files[0];
+  const status = document.getElementById('ocr-status');
+  const result = document.getElementById('ocr-result');
+  status.textContent = 'Analyse en cours…';
+  status.style.background = 'var(--amber-dim)';
+  status.style.color = 'var(--amber)';
+  result.innerHTML = '<span style="color:var(--text-muted);font-style:italic">⟳ Reconnaissance en cours…</span>';
+  if (typeof window.CE?.analyzeOCR !== 'function') {
+    setTimeout(() => simulateOCR(), 100);
+    return;
+  }
+  window.CE.analyzeOCR(file).then(data => {
+    if (data.success) {
+      status.textContent = 'Terminé';
+      status.style.background = 'var(--green-dim)';
+      status.style.color = 'var(--green)';
+      result.innerHTML = `
+        <div style="text-align:start">
+          <div style="display:grid;gap:10px">
+            <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Fournisseur</span><div style="color:var(--text-primary);font-weight:500">${data.data.supplier}</div></div>
+            <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Montant TTC</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">${data.data.montant_ttc.toLocaleString('fr-FR')} €</div></div>
+            <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">TVA</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">${data.data.tva.toLocaleString('fr-FR')} € (20%)</div></div>
+            <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Compte suggéré</span><div><span style="color:var(--accent);font-weight:600;font-family:var(--font-data)">${data.data.account}</span> <span style="color:var(--text-secondary)">— ${data.data.account_label}</span></div></div>
+          </div>
+        </div>`;
+    } else {
+      throw new Error(data.error || 'Échec de l\'analyse OCR');
+    }
+  }).catch(err => {
+    status.textContent = 'Erreur';
+    status.style.background = 'var(--red-dim)';
+    status.style.color = 'var(--red)';
+    result.innerHTML = `<span style="color:var(--red)">⚠ ${err.message}</span>`;
+  });
+}
+
+function initOCRUpload() {
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  if (!dropzone || !fileInput) return;
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--accent)';
+  });
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.style.borderColor = 'var(--border)';
+  });
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.style.borderColor = 'var(--border)';
+    handleOCRFile(e.dataTransfer.files);
+  });
+  fileInput.addEventListener('change', () => {
+    handleOCRFile(fileInput.files);
+    fileInput.value = '';
+  });
 }
 
 // ====== SIMULATE OCR ======
@@ -1359,7 +1423,7 @@ animateKPI();
 </script>
 <script>window.COMPTAEASY_API = window.location.hostname.includes('github.io') ? 'https://comptaeasy-7gej.vercel.app' : '';</script>
 <script>
-(function(){const API=window.COMPTAEASY_API||'';window.CE={};window.CE.loadDashboard=async()=>{try{const res=await fetch(API+'/api/dashboard');const data=await res.json();const kpi=data.kpi;const caEl=document.getElementById('kpi-ca');if(caEl)caEl.textContent=kpi.ca.replace(/[^0-9,\s]/g,'').trim();const tbody=document.querySelector('.data-table tbody');if(tbody&&data.journal){tbody.innerHTML=data.journal.map(e=>`<tr><td class="mono">${e.date}</td><td class="mono">${e.piece||'-'}</td><td>${e.label}</td><td class="mono">${e.compte}</td><td class="mono ${e.debit>0?'text-red':''}">${e.debit>0?e.debit.toFixed(2):'—'}</td><td class="mono ${e.credit>0?'text-green':''}">${e.credit>0?e.credit.toFixed(2):'—'}</td><td><span class="status-pill ${e.statut}">${e.statut}</span></td></tr>`).join('')}return data}catch(e){console.warn('API not available, demo mode',e);return null}};window.CE.askIA=async(q,lang)=>{const res=await fetch(API+'/api/ia/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,lang:lang||'fr'}),signal:AbortSignal.timeout(30000)});return res.json()};window.CE.searchVeille=async(q)=>{const res=await fetch(API+'/api/veille?q='+encodeURIComponent(q));return res.json()};window.CE.loadClients=async()=>{const res=await fetch(API+'/api/clients');return res.json()};if(window.location.hash==='#dashboard')window.CE.loadDashboard();console.log('✓ API Bridge loaded')})();
+(function(){const API=window.COMPTAEASY_API||'';window.CE={};window.CE.loadDashboard=async()=>{try{const res=await fetch(API+'/api/dashboard');const data=await res.json();const kpi=data.kpi;const caEl=document.getElementById('kpi-ca');if(caEl)caEl.textContent=kpi.ca.replace(/[^0-9,\s]/g,'').trim();const tbody=document.querySelector('.data-table tbody');if(tbody&&data.journal){tbody.innerHTML=data.journal.map(e=>`<tr><td class="mono">${e.date}</td><td class="mono">${e.piece||'-'}</td><td>${e.label}</td><td class="mono">${e.compte}</td><td class="mono ${e.debit>0?'text-red':''}">${e.debit>0?e.debit.toFixed(2):'—'}</td><td class="mono ${e.credit>0?'text-green':''}">${e.credit>0?e.credit.toFixed(2):'—'}</td><td><span class="status-pill ${e.statut}">${e.statut}</span></td></tr>`).join('')}return data}catch(e){console.warn('API not available, demo mode',e);return null}};window.CE.askIA=async(q,lang)=>{const res=await fetch(API+'/api/ia/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,lang:lang||'fr'}),signal:AbortSignal.timeout(30000)});return res.json()};window.CE.searchVeille=async(q)=>{const res=await fetch(API+'/api/veille?q='+encodeURIComponent(q));return res.json()};window.CE.loadClients=async()=>{const res=await fetch(API+'/api/clients');return res.json()};window.CE.analyzeOCR=async(file,supplier,amount)=>{const form=new FormData();if(file)form.append('file',file);form.append('supplier',supplier||'');form.append('amount',amount||'');const res=await fetch(API+'/api/ocr/analyze',{method:'POST',body:form});return res.json()};if(window.location.hash==='#dashboard')window.CE.loadDashboard();console.log('✓ API Bridge loaded')})();
 // Check API connectivity for AI status
 (function(){
   const el=document.getElementById('ai-status-label');
