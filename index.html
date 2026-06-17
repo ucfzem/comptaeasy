@@ -908,8 +908,8 @@ const i18n = {
   }
 };
 let currentLang='fr',darkMode=!0,notifsOpen=!1;
-let CLAUDE_KEY = localStorage.getItem('ce_claude_key') || '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';
-let GEMINI_KEY = localStorage.getItem('ce_gemini_key') || 'AQ.Ab8RN6Jh5_69YGqsd42GhlOa0YcnxwDQwMbx6K_ImlVmkzJKvA';
+let CLAUDE_KEY = localStorage.getItem('ce_claude_key') || '';
+let GEMINI_KEY = localStorage.getItem('ce_gemini_key') || '';
 
 function applyLang(lang){
   const d=i18n[lang]; if(!d)return;
