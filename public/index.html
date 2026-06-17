@@ -1634,7 +1634,7 @@ async function localImageOCR(file) {
 async function callVisionProxy(base64, mediaType) {
   const apiBase = window.COMPTAEASY_API || '';
   const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 35000);
+  const tid = setTimeout(() => ctrl.abort(), 15000);
   const resp = await fetch(apiBase + '/api/ocr/vision', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1759,21 +1759,27 @@ async function extractPDFPageAsImage(file) {
   const buffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
   const page = await pdf.getPage(1);
-  const scale = 2;
+  const scale = 1.5;
   const vp = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
-  canvas.width = vp.width;
-  canvas.height = vp.height;
+  canvas.width = Math.min(vp.width, 1600);
+  canvas.height = Math.min(vp.height, 2400);
   const ctx = canvas.getContext('2d');
-  await page.render({ canvasContext: ctx, viewport: vp }).promise;
-  const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  try {
+    await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  } catch (renderErr) {
+    throw new Error('Échec rendu PDF: ' + renderErr.message);
+  }
+  const base64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+  const status = document.getElementById('ocr-status');
+  if (status) { status.textContent = '☁ Envoi à l\'IA Vision…'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
   try {
     return await callVisionProxy(base64, 'image/jpeg');
   } catch (apiError) {
-    console.warn('Vision API failed for PDF, Tesseract fallback:', apiError.message);
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
-    const text = await localImageOCR(new File([blob], 'page.jpg', { type: 'image/jpeg' }));
-    return parseOCRText(text);
+    console.warn('Vision API failed for PDF:', apiError.message);
+    throw new Error('API Vision indisponible: ' + apiError.message);
   }
 }
 
