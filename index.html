@@ -908,7 +908,7 @@ const i18n = {
   }
 };
 let currentLang='fr',darkMode=!0,notifsOpen=!1;
-let CLAUDE_KEY = localStorage.getItem('ce_claude_key') || 'sk-ant-api03-SQKysULVWWkmQCqNTN-5t6Dn2jnMMQF5sJW9a1ldVRi5zQx7E5sFtmI8qmiXYXGq0ScqqrTwxELfQ2pXqFFxlg-FPAYkgAA';
+let CLAUDE_KEY = localStorage.getItem('ce_claude_key') || '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';
 let GEMINI_KEY = localStorage.getItem('ce_gemini_key') || 'AQ.Ab8RN6Jh5_69YGqsd42GhlOa0YcnxwDQwMbx6K_ImlVmkzJKvA';
 
 function applyLang(lang){
@@ -1449,34 +1449,26 @@ function handleOCRFile(files) {
   if (result) { result.style.textAlign = 'center'; result.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Cliquez sur <strong style="color:var(--accent)">Analyser la facture</strong> pour lancer l\'OCR</span>'; }
 }
 
-// ====== VISION OCR VIA CLAUDE API (for images) ======
+// ====== VISION OCR VIA BACKEND PROXY (avoids CORS) ======
+async function callVisionProxy(base64, mediaType) {
+  const apiBase = window.COMPTAEASY_API || '';
+  const resp = await fetch(apiBase + '/api/ocr/vision', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: base64, media_type: mediaType || 'image/jpeg' })
+  });
+  if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error || `HTTP ${resp.status}`); }
+  return resp.json();
+}
+
 async function runVisionOCR(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async function(e) {
-      const base64 = e.target.result.split(',')[1];
-      const mediaType = file.type || 'image/jpeg';
       try {
-        if (!CLAUDE_KEY) throw new Error('Clé Anthropic manquante. Configurez-la via le bouton 🔑 dans l\'en-tête.');
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 1000,
-            messages: [{
-              role: 'user',
-              content: [
-                { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
-                { type: 'text', text: 'Tu es un OCR comptable. Extrais les données de cette facture et réponds UNIQUEMENT en JSON valide, sans backticks ni explication, avec exactement ces clés:\n{\n  "supplier": "nom du fournisseur ou émetteur",\n  "invoice_no": "numéro de facture",\n  "date": "JJ/MM/AAAA",\n  "montant_ht": 0.00,\n  "tva": 0.00,\n  "montant_ttc": 0.00,\n  "account": "601100",\n  "account_label": "Achats matières"\n}\nSi une valeur est absente, utilise null pour les nombres et "—" pour les textes.\nPour le compte comptable, déduis-le du type de prestation (loyer→613200, honoraires→622700, télécom→626000, publicité→623000, fournitures→601100, transport→624100).' }
-              ]
-            }]
-          })
-        });
-        const json = await resp.json();
-        const text = (json.content || []).map(b => b.text || '').join('').trim();
-        const clean = text.replace(/```json|```/g, '').trim();
-        resolve(JSON.parse(clean));
+        const base64 = e.target.result.split(',')[1];
+        const mediaType = file.type || 'image/jpeg';
+        resolve(await callVisionProxy(base64, mediaType));
       } catch(err) { reject(err); }
     };
     reader.onerror = reject;
@@ -1551,25 +1543,7 @@ async function extractPDFPageAsImage(file) {
         const ctx = canvas.getContext('2d');
         await page.render({ canvasContext: ctx, viewport: vp }).promise;
         const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
-        if (!CLAUDE_KEY) throw new Error('Clé Anthropic manquante');
-        const resp = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01' },
-          body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 1000,
-            messages: [{
-              role: 'user',
-              content: [
-                { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
-                { type: 'text', text: 'Extrais les données de cette facture PDF scannée. Réponds UNIQUEMENT en JSON valide sans backticks:\n{"supplier":"","invoice_no":"","date":"JJ/MM/AAAA","montant_ht":0,"tva":0,"montant_ttc":0,"account":"601100","account_label":"Achats matières"}' }
-              ]
-            }]
-          })
-        });
-        const json  = await resp.json();
-        const text  = (json.content || []).map(b => b.text || '').join('').trim();
-        resolve(JSON.parse(text.replace(/```json|```/g,'').trim()));
+        resolve(await callVisionProxy(base64, 'image/jpeg'));
       } catch(err) { reject(err); }
     };
     reader.onerror = reject;
@@ -1772,7 +1746,7 @@ function animateKPI(){
 applyLang('fr');
 animateKPI();
 </script>
-<script>window.COMPTAEASY_API = window.location.hostname.includes('github.io') ? 'https://comptaeasy-7gej.vercel.app' : '';</script>
+<script>window.COMPTAEASY_API = window.location.hostname.includes('github.io') ? 'https://comptaeasy.vercel.app' : '';</script>
 <script>
 (function(){const API=window.COMPTAEASY_API||'';window.CE={};window.CE.loadDashboard=async()=>{try{const res=await fetch(API+'/api/dashboard');const data=await res.json();const kpi=data.kpi;const caEl=document.getElementById('kpi-ca');if(caEl)caEl.textContent=kpi.ca.replace(/[^0-9,\s]/g,'').trim();const tbody=document.querySelector('.data-table tbody');if(tbody&&data.journal){tbody.innerHTML=data.journal.map(e=>`<tr><td class="mono">${e.date}</td><td class="mono">${e.piece||'-'}</td><td>${e.label}</td><td class="mono">${e.compte}</td><td class="mono ${e.debit>0?'text-red':''}">${e.debit>0?e.debit.toFixed(2):'—'}</td><td class="mono ${e.credit>0?'text-green':''}">${e.credit>0?e.credit.toFixed(2):'—'}</td><td><span class="status-pill ${e.statut}">${e.statut}</span></td></tr>`).join('')}return data}catch(e){console.warn('API not available, demo mode',e);return null}};window.CE.askIA=async(q,lang)=>{const res=await fetch(API+'/api/ia/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,lang:lang||'fr'}),signal:AbortSignal.timeout(30000)});return res.json()};window.CE.searchVeille=async(q)=>{const res=await fetch(API+'/api/veille?q='+encodeURIComponent(q));return res.json()};window.CE.loadClients=async()=>{const res=await fetch(API+'/api/clients');return res.json()};window.CE.analyzeOCR=async(file,supplier,amount)=>{const form=new FormData();if(file)form.append('file',file);form.append('supplier',supplier||'');form.append('amount',amount||'');const res=await fetch(API+'/api/ocr/analyze',{method:'POST',body:form});return res.json()};if(window.location.hash==='#dashboard')window.CE.loadDashboard();console.log('✓ API Bridge loaded')})();
 // Check API connectivity for AI status

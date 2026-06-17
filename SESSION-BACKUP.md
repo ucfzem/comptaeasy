@@ -297,9 +297,44 @@ L'utilisateur peut les surcharger via le bouton 🔑 dans l'en-tête
 
 ---
 
+## Mises à jour tardives
+
+### Problème : CORS Anthropic
+
+L'appel `fetch('https://api.anthropic.com/v1/messages')` depuis le navigateur est
+bloqué par **CORS** → `simulateOCR()` prenait le relais → résultat "K. Abdessalam" factice.
+
+### Solution
+
+1. **Backend proxy** — Nouvel endpoint `POST /api/ocr/vision` dans `routes/ocr.js`
+   - Reçoit `{ image: base64, media_type }`
+   - Appelle Anthropic côté serveur (pas de CORS)
+   - Retourne le JSON parsé
+   - Clé lue depuis `process.env.ANTHROPIC_API_KEY`
+
+2. **Frontend** — `runVisionOCR()` et `extractPDFPageAsImage()` réécrits :
+   - Appellent `callVisionProxy(base64, mediaType)` → `POST /api/ocr/vision`
+   - Plus d'appel direct à Anthropic
+   - `extractPDFPageAsImage` supprimé de la duplication API → utilise le proxy
+
+3. **Model name** corrigé : `claude-sonnet-4-6` → `claude-sonnet-4-20250514`
+
+4. **Env Vercel** : `ANTHROPIC_API_KEY` ajoutée (production)
+
+5. **COMPTAEASY_API** mis à jour : `comptaeasy-7gej.vercel.app` → `comptaeasy.vercel.app`
+
+### Fichiers modifiés
+
+| Fichier | Changement |
+|---------|-----------|
+| `routes/ocr.js` | +`POST /vision` (proxy Anthropic) |
+| `index.html` | `runVisionOCR` + `extractPDFPageAsImage` → proxy, `callVisionProxy` ajouté, `COMPTAEASY_API` updated |
+| `public/index.html` | Sync copie |
+
 ## Résumé des Commits
 
 ```
+b87a12c session backup: complete transcript of OCR import de factures implementation
 b32b7bc feat: embed API keys for foreign users
 0659239 feat: persistent API key config (Claude for Vision OCR, Gemini for assistant)
 131f754 feat: real Vision AI OCR via Claude API for images + PDF.js text + scanned fallback
@@ -310,7 +345,5 @@ bda2f53 fix: resolve all mobile upload bugs
 6c78412 fix: nest file input inside label for iOS reliability
 d61e408 fix: mobile upload using label for file input
 ```
-
----
 
 *Fin du document — Session complète du 17 Juin 2026*

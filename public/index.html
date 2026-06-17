@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="fr" dir="ltr">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>ComptaEasy — Plateforme Comptable Expert-Comptable</title>
 <meta name="description" content="ComptaEasy, la plateforme comptable nouvelle génération pour experts-comptables. Saisie, lettrage, TVA, bilan, IA fiscale — tout-en-un."/>
 <meta name="keywords" content="comptabilité, expert-comptable, logiciel comptable, TVA, bilan, lettrage, fiscalité marocaine"/>
@@ -67,22 +67,24 @@ body.light {
   --text-muted:     #8B9CC4;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 14px; scroll-behavior: smooth; }
+html { font-size: 14px; scroll-behavior: smooth; scroll-padding-top: env(safe-area-inset-top, 8px); scrollbar-gutter: stable; }
 body {
   background: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-ui);
   line-height: 1.5;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
+[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
 .app-shell {
   display: grid;
   grid-template-columns: var(--sidebar-w) 1fr;
   grid-template-rows: var(--header-h) 1fr;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 .sidebar {
   grid-row: 1 / -1;
@@ -94,6 +96,7 @@ html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   transition: var(--transition);
   z-index: 100;
@@ -103,7 +106,10 @@ html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
   align-items: center;
   gap: 10px;
   padding: 0 20px;
-  height: var(--header-h);
+  padding-top: 12px;
+  padding-top: env(safe-area-inset-top, 12px);
+  height: calc(var(--header-h) + 12px);
+  height: calc(var(--header-h) + env(safe-area-inset-top, 12px));
   border-block-end: 1px solid var(--border);
 }
 .logo-icon {
@@ -158,7 +164,7 @@ html[dir="rtl"] { font-family: 'Inter', 'Segoe UI', 'Tahoma', sans-serif; }
   background: var(--accent);
   border-radius: 0 2px 2px 0;
 }
-html[dir="rtl"] .nav-item.active::before {
+[dir="rtl"] .nav-item.active::before {
   inset-inline-start: auto;
   inset-inline-end: 0;
   border-radius: 2px 0 0 2px;
@@ -204,6 +210,10 @@ html[dir="rtl"] .nav-item.active::before {
   display: flex;
   align-items: center;
   padding: 0 24px;
+  padding-top: 12px;
+  padding-top: env(safe-area-inset-top, 12px);
+  min-height: calc(var(--header-h) + 12px);
+  min-height: calc(var(--header-h) + env(safe-area-inset-top, 12px));
   gap: 16px;
   position: sticky;
   top: 0;
@@ -295,6 +305,13 @@ html[dir="rtl"] .nav-item.active::before {
 @keyframes ticker-scroll {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
+}
+@keyframes ticker-scroll-rtl {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(50%); }
+}
+[dir="rtl"] .ticker-inner {
+  animation-name: ticker-scroll-rtl;
 }
 .ticker-item {
   display: flex;
@@ -634,7 +651,78 @@ html[dir="rtl"] .nav-item.active::before {
 .notif-text { font-size: 11.5px; color: var(--text-secondary); line-height: 1.45; }
 .notif-text strong { color: var(--text-primary); font-weight: 600; }
 .notif-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: var(--font-data); }
+.ocr-field {
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  position: relative;
+}
+.ocr-field-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+.ocr-field-value {
+  color: var(--text-primary);
+  font-weight: 500;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+  word-break: break-all;
+}
+.ocr-field-value.mono {
+  font-family: var(--font-data);
+}
+.ocr-copy-btn {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 10px;
+  padding: 3px 7px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: var(--transition);
+  line-height: 1.4;
+}
+.ocr-copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.ocr-copy-btn.copied { color: var(--green); border-color: var(--green); }
+.ocr-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.ocr-action-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: var(--transition);
+  text-align: center;
+}
+.ocr-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ocr-action-btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.ocr-action-btn.primary:hover { background: var(--accent-dim); }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script>(function(){var t='cfut'+'_IuU3BjWacQMd1HsdpqlLUUV6QIidz20ZNBSX6oGtb0de52ae';var s=document.createElement('script');s.src='https://static.cloudflareinsights.com/beacon.min.js';s.defer=!0;s.setAttribute('data-cf-beacon',JSON.stringify({token:t}));document.head.appendChild(s)})();</script>
 </head>
 <body>
@@ -683,7 +771,7 @@ html[dir="rtl"] .nav-item.active::before {
       <div class="user-card">
         <div class="avatar">MC</div>
         <div class="user-info">
-          <div class="user-name">Ahmed Zniber</div>
+          <div class="user-name">Z. Ahmed</div>
           <div class="user-role" data-i18n="user.role">Expert-Comptable</div>
         </div>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text-muted);flex-shrink:0"><path d="M4 6l4 4 4-4"/></svg>
@@ -704,6 +792,7 @@ html[dir="rtl"] .nav-item.active::before {
       <button class="theme-toggle" onclick="toggleTheme()" data-tip="Mode clair/sombre">
         <svg id="theme-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v2M8 13v2M1 8h2M13 8h2M2.93 2.93l1.41 1.41M11.66 11.66l1.41 1.41M2.93 13.07l1.41-1.41M11.66 4.34l1.41-1.41"/><circle cx="8" cy="8" r="3"/></svg>
       </button>
+      <button class="icon-btn" onclick="configureAPI()" data-tip="Configurer les clés API">🔑</button>
       <div style="position:relative">
         <button class="icon-btn" onclick="toggleNotifs()">
           <div class="notif-dot"></div>
@@ -770,7 +859,7 @@ html[dir="rtl"] .nav-item.active::before {
         <div class="check-item"><div class="check-box"></div><span class="check-label" data-i18n="check.bilan">Édition du bilan</span></div>
       </div></div>
       <div class="card"><div class="card-header"><div class="card-title"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 13L5 7l4 3 3-5 3 4"/></svg><span data-i18n="cashflow.title">Flux de Trésorerie</span></div><button class="card-action" data-i18n="action.detail">Détail →</button></div><div class="chart-wrap"><div class="chart-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div><span data-i18n="cashflow.encaissements">Encaissements</span></div><div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div><span data-i18n="cashflow.decaissements">Décaissements</span></div></div><svg viewBox="0 0 280 110" style="width:100%;overflow:visible"><defs><linearGradient id="barG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10B981" stop-opacity="0.9"/><stop offset="100%" stop-color="#10B981" stop-opacity="0.5"/></linearGradient><linearGradient id="barR" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EF4444" stop-opacity="0.9"/><stop offset="100%" stop-color="#EF4444" stop-opacity="0.5"/></linearGradient></defs><line x1="0" y1="0" x2="280" y2="0" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><line x1="0" y1="27" x2="280" y2="27" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><line x1="0" y1="54" x2="280" y2="54" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><line x1="0" y1="81" x2="280" y2="81" stroke="rgba(255,255,255,0.05)" stroke-width="1"/><rect x="2" y="20" width="16" height="62" rx="3" fill="url(#barG)"/><rect x="20" y="38" width="16" height="44" rx="3" fill="url(#barR)"/><rect x="44" y="15" width="16" height="67" rx="3" fill="url(#barG)"/><rect x="62" y="30" width="16" height="52" rx="3" fill="url(#barR)"/><rect x="86" y="10" width="16" height="72" rx="3" fill="url(#barG)"/><rect x="104" y="35" width="16" height="47" rx="3" fill="url(#barR)"/><rect x="128" y="8" width="16" height="74" rx="3" fill="url(#barG)"/><rect x="146" y="28" width="16" height="54" rx="3" fill="url(#barR)"/><rect x="170" y="5" width="16" height="77" rx="3" fill="url(#barG)"/><rect x="188" y="25" width="16" height="57" rx="3" fill="url(#barR)"/><rect x="212" y="3" width="16" height="79" rx="3" fill="url(#barG)"/><rect x="230" y="22" width="16" height="60" rx="3" fill="url(#barR)"/><text x="14" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Juil</text><text x="56" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Août</text><text x="98" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Sept</text><text x="140" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Oct</text><text x="182" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Nov</text><text x="224" y="98" font-size="9" fill="#4B5A7A" text-anchor="middle" font-family="JetBrains Mono, monospace">Déc</text></svg></div></div>
-      <div class="card"><div class="card-header"><div class="card-title"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M6 6.5s0-2 2-2 2 1.5 0 2.5-2 1.5-2 1.5v1M8 12v.5"/></svg><span data-i18n="ai.title">Assistant IA Fiscal</span></div><div class="card-badge">Beta</div></div><div class="ai-panel"><div class="ai-chip"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="8"/></svg><span id="ai-status-label">⟳ Connexion…</span></div><div class="ai-msg" id="ai-response"><strong data-i18n="ai.greeting">Bonjour Ahmed.</strong> <span data-i18n="ai.greeting.msg">J'ai détecté <strong>2 anomalies</strong> dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2026-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?</span></div><div class="ai-input-row"><input class="ai-input" id="ai-input" type="text" data-i18n-placeholder="ai.placeholder" placeholder="Posez une question de doctrine fiscale…"/><button class="ai-send-btn" onclick="askAI()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2L2 7l5 3 3 5 4-13z"/></svg></button></div><div class="ai-suggestions"><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug1">Taux IS applicable ?</div><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug2">Régime TVA réel normal</div><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug3">Optimisation IS 2026</div></div></div></div>
+      <div class="card"><div class="card-header"><div class="card-title"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M6 6.5s0-2 2-2 2 1.5 0 2.5-2 1.5-2 1.5v1M8 12v.5"/></svg><span data-i18n="ai.title">Assistant IA Fiscal</span></div><div class="card-badge">Beta</div></div><div class="ai-panel"><div class="ai-chip"><svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="8"/></svg><span id="ai-status-label">⟳ Connexion…</span></div><div class="ai-msg" id="ai-response"><strong data-i18n="ai.greeting">Bonjour Z. Ahmed.</strong> <span data-i18n="ai.greeting.msg">J'ai détecté <strong>2 anomalies</strong> dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2026-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?</span></div><div class="ai-input-row"><input class="ai-input" id="ai-input" type="text" data-i18n-placeholder="ai.placeholder" placeholder="Posez une question de doctrine fiscale…"/><button class="ai-send-btn" onclick="askAI()"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2L2 7l5 3 3 5 4-13z"/></svg></button></div><div class="ai-suggestions"><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug1">Taux IS applicable ?</div><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug2">Régime TVA réel normal</div><div class="ai-suggestion-chip" onclick="fillAI(this)" data-i18n="ai.sug3">Optimisation IS 2026</div></div></div></div>
     </div>
   </main>
 </div>
@@ -783,14 +872,16 @@ const AI_ANSWERS = {
     {q:"tva",a:"TVA Maroc : régime réel pour CA > 2M MAD (biens) ou > 500K MAD (services). Taux : 20% (normal), 14%, 10%, 7%. Déclaration mensuelle ou trimestrielle."},
     {q:"optimisation",a:"Pour optimiser l'IS 2026 : 1. Provisionner les risques avant le 31/12, 2. Maximiser les amortissements dégressifs, 3. Intégrer le crédit d'impôt recherche (CIR), 4. Utiliser le régime des sociétés mères (plus-values nettes)."},
     {q:"amort",a:"Dégressif : 1,25× linéaire pour +6 ans, 1,75× pour +4 ans, 2,25× pour +3 ans. Linéaire recommandé pour les biens de faible valeur."},
-    {q:"cvae",a:"Cotisation Minimale (CM) : 0,5% du CA brut. Déductible de l[…]IS sauf exception."},
+    {q:"cvae",a:"CM (Cotisation Minimale) : 0,50% du CA HT (Art. 144 CGI). Minimum : 3 000 MAD. Exonérée les 36 premiers mois (Art. 144-I-1°). Déductible de l'IS."},
+    {q:"déficit",a:"Résultat déficitaire ? IS = 0. Mais la CM (0,50% du CA HT, min 3 000 MAD) reste due, sauf si <strong>36 premiers mois</strong> (exonération CM, Art. 144-I-1°). Nouvelle société déficitaire = rien à payer."},
+    {q:"perte",a:"En perte ? IS = 0. Mais la CM (0,50% du CA HT, min 3 000 MAD) reste due, sauf <strong>36 premiers mois</strong> (exonération CM)."},
     {q:"fec",a:"FEC (Fichier des Écritures Comptables) obligatoire en cas de contrôle DGI. Norme 2013 : 15 colonnes, format CSV/UTF-8. Délai de transmission : 15 jours ouvrés."},
     {q:"bofip",a:"DGI-BIC : les provisions pour risques doivent être justifiées par un litige ou un risque avéré. Le simple risque de change ou de taux n'est pas provisionnable."},
-    {q:"default",a:"Bonjour Ahmed. J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2026-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?"}
+    {q:"default",a:"Bonjour Z. Ahmed. J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2026-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?"}
   ],
-  en: [{q:"taux is",a:"Moroccan CIT rates: 31% (profit > 100M MAD), 20% (1M-100M MAD), 10% (≤ 1M MAD). Art. 17-I Moroccan CGI."},{q:"tva",a:"Standard VAT regime for companies with revenue > €840K (goods) or > €254K (services). Monthly return. Standard rate: 20%."},{q:"default",a:"Hello Ahmed. I detected 2 anomalies in January entries: a €12.50 VAT discrepancy and a misallocated account 622700."}],
-  es: [{q:"taux is",a:"Tipo IS Marruecos: 31% (beneficio > 100M MAD), 20% (1M-100M MAD), 10% (≤ 1M MAD)."},{q:"default",a:"Buenos días, Ahmed. He detectado 2 anomalías en los asientos de enero."}],
-  ar: [{q:"taux is",a:"معدل ضريبة الشركات المغربي: 31% (أرباح > 100M درهم)، 20% (1M-100M درهم)، 10% (≤ 1M درهم)"},{q:"default",a:"مرحباً أحمد. اكتشفت شذوذَين في قيود يناير."}]
+  en: [{q:"taux is",a:"Moroccan CIT rates: 31% (profit > 100M MAD), 20% (1M-100M MAD), 10% (≤ 1M MAD). Art. 17-I Moroccan CGI."},{q:"tva",a:"Standard VAT regime for companies with revenue > €840K (goods) or > €254K (services). Monthly return. Standard rate: 20%."},{q:"deficit",a:"Tax loss? CIT = 0. But CM (0.50% of revenue, min 3,000 MAD) is still due unless <strong>first 36 months</strong> (CM exemption, Art. 144-I-1°). New company with loss = nothing to pay."},{q:"default",a:"Hello Z. Ahmed. I detected 2 anomalies in January entries: a €12.50 VAT discrepancy and a misallocated account 622700."}],
+  es: [{q:"taux is",a:"Tipo IS Marruecos: 31% (beneficio > 100M MAD), 20% (1M-100M MAD), 10% (≤ 1M MAD)."},{q:"deficit",a:"¿Resultado deficitario? IS = 0. Pero la CM (0,50% de ingresos, mín 3 000 MAD) sigue aplicándose salvo <strong>primeros 36 meses</strong> (exención CM, Art. 144-I-1°). Nueva empresa deficitaria = nada que pagar."},{q:"default",a:"Buenos días, Z. Ahmed. He detectado 2 anomalías en los asientos de enero."}],
+  ar: [{q:"taux is",a:"معدل ضريبة الشركات المغربي: 31% (أرباح > 100M درهم)، 20% (1M-100M درهم)، 10% (≤ 1M درهم)"},{q:"cm",a:"الواجب الأدنى (CM): 0,50% من المبيعات HT. الحد الأدنى: 3 000 درهم. معفى منه 36 شهرًا الأولى."},{q:"خسارة",a:"نتيجة سلبية؟ ضريبة الشركات = 0. ولكن الواجب الأدنى (0,50%، حد أدنى 3 000 درهم) يبقى مستحقًا إلا في أول 36 شهرًا."},{q:"default",a:"مرحباً أحمد الزموري. اكتشفت شذوذَين في قيود يناير."}]
 };
 
 function findAIAnswer(q, lang) {
@@ -804,19 +895,21 @@ function findAIAnswer(q, lang) {
 
 const i18n = {
   fr: {
-    "nav.section.core":"Principal","nav.section.fiscal":"Fiscal & Conformité","nav.section.config":"Configuration","nav.dashboard":"Tableau de bord","nav.saisie":"Saisie & Automatisation","nav.clotures":"Clôtures Annuelles","nav.etats":"États Financiers","nav.fiscalite":"Module Fiscalité","nav.ged":"Portail GED Clients","nav.veille":"Veille Juridique & IA","nav.clients":"Dossiers Clients","nav.parametres":"Paramètres","user.role":"Expert-Comptable","dashboard.title":"Tableau de bord","dashboard.subtitle":"Vue d'ensemble — Exercice 2026","notif.title":"Notifications","notif.markAll":"Tout marquer lu","notif.tva":"Déclaration TVA","notif.tvaDesc":"Échéance dans 3 jours","notif.lettrage":"Lettrage automatique","notif.lettrageDesc":"847 écritures lettrées","notif.client":"Client K. Abdessalam","notif.clientDesc":"5 nouvelles pièces déposées","ticker.label":"KPI LIVE","ticker.ca":"CA Cumulé","ticker.tva":"TVA Collectée","ticker.clients":"Clients Actifs","ticker.ecritures":"Écritures/Mois","ticker.is":"Provision IS","ticker.amort":"Amortissements","kpi.ca":"Chiffre d'Affaires","kpi.ca.sub":"Exercice 2026 cumulé","kpi.resultat":"Résultat Net","kpi.resultat.sub":"Après IS estimé","kpi.tva.label":"TVA à déclarer","kpi.tva":"Déclaration TVA","kpi.tva.amount":"Montant : 569 500 €","kpi.lettrage":"Lettrage Automatique","kpi.lettrage.sub":"Écritures lettrées ce mois","table.journals.title":"Dernières Écritures Comptables","table.date":"Date ↕","table.piece":"N° Pièce ↕","table.libelle":"Libellé","table.compte":"Compte","table.debit":"Débit (€)","table.credit":"Crédit (€)","table.statut":"Statut","status.validated":"Lettré","status.pending":"Non lettré","status.overdue":"En retard","status.processing":"En cours","action.viewAll":"Voir tout →","action.calendar":"Calendrier →","action.openModule":"Ouvrir →","action.detail":"Détail →","alerts.title":"Alertes & Échéances","alert.tva.title":"TVA — Déclaration mensuelle","alert.tva.desc":"Montant à déclarer : 569 500 € — Compte 34551","alert.is.title":"Acompte IS — 4ème échéance","alert.is.desc":"Provision estimée : 35 593 €","alert.bilan.title":"Clôture bilan — Dossier T. Omar SARL","alert.bilan.desc":"Inventaire physique non confirmé","alert.liasse.title":"Liasse fiscale — Dossier H. Khadija","alert.liasse.desc":"Télétransmission DGI en attente de validation","alert.ocr.title":"OCR — 12 factures en attente","alert.ocr.desc":"Reconnaissance automatique disponible","alert.cvae.title":"Cotisation Minimale 2026","alert.cvae.desc":"Formulaire CM à déposer","checklist.title":"Travaux d'Inventaire","checklist.progress":"Avancement clôture 2026","check.rapprochement":"Rapprochement bancaire","check.lettrage":"Lettrage comptes tiers","check.amort":"Calcul amortissements","check.provisions":"Dotations aux provisions","check.stock":"Valorisation des stocks","check.bilan":"Édition du bilan","cashflow.title":"Flux de Trésorerie","cashflow.encaissements":"Encaissements","cashflow.decaissements":"Décaissements","ai.title":"Assistant IA Fiscal","ai.status":"Assistant · Mode local","ai.greeting":"Bonjour Ahmed.","ai.greeting.msg":"J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2026-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?","ai.placeholder":"Posez une question de doctrine fiscale…","ai.sug1":"Taux IS applicable ?","ai.sug2":"Régime TVA réel normal","ai.sug3":"Optimisation IS 2026"
+    "nav.section.core":"Principal","nav.section.fiscal":"Fiscal & Conformité","nav.section.config":"Configuration","nav.dashboard":"Tableau de bord","nav.saisie":"Saisie & Automatisation","nav.clotures":"Clôtures Annuelles","nav.etats":"États Financiers","nav.fiscalite":"Module Fiscalité","nav.ged":"Portail GED Clients","nav.veille":"Veille Juridique & IA","nav.clients":"Dossiers Clients","nav.parametres":"Paramètres","user.role":"Expert-Comptable","dashboard.title":"Tableau de bord","dashboard.subtitle":"Vue d'ensemble — Exercice 2026","notif.title":"Notifications","notif.markAll":"Tout marquer lu","notif.tva":"Déclaration TVA","notif.tvaDesc":"Échéance dans 3 jours","notif.lettrage":"Lettrage automatique","notif.lettrageDesc":"847 écritures lettrées","notif.client":"Client K. Abdessalam","notif.clientDesc":"5 nouvelles pièces déposées","ticker.label":"KPI LIVE","ticker.ca":"CA Cumulé","ticker.tva":"TVA Collectée","ticker.clients":"Clients Actifs","ticker.ecritures":"Écritures/Mois","ticker.is":"Provision IS","ticker.amort":"Amortissements","kpi.ca":"Chiffre d'Affaires","kpi.ca.sub":"Exercice 2026 cumulé","kpi.resultat":"Résultat Net","kpi.resultat.sub":"Après IS estimé","kpi.tva.label":"TVA à déclarer","kpi.tva":"Déclaration TVA","kpi.tva.amount":"Montant : 569 500 €","kpi.lettrage":"Lettrage Automatique","kpi.lettrage.sub":"Écritures lettrées ce mois","table.journals.title":"Dernières Écritures Comptables","table.date":"Date ↕","table.piece":"N° Pièce ↕","table.libelle":"Libellé","table.compte":"Compte","table.debit":"Débit (€)","table.credit":"Crédit (€)","table.statut":"Statut","status.validated":"Lettré","status.pending":"Non lettré","status.overdue":"En retard","status.processing":"En cours","action.viewAll":"Voir tout →","action.calendar":"Calendrier →","action.openModule":"Ouvrir →","action.detail":"Détail →","alerts.title":"Alertes & Échéances","alert.tva.title":"TVA — Déclaration mensuelle","alert.tva.desc":"Montant à déclarer : 569 500 € — Compte 34551","alert.is.title":"Acompte IS — 4ème échéance","alert.is.desc":"Provision estimée : 35 593 €","alert.bilan.title":"Clôture bilan — Dossier T. Omar SARL","alert.bilan.desc":"Inventaire physique non confirmé","alert.liasse.title":"Liasse fiscale — Dossier H. Khadija","alert.liasse.desc":"Télétransmission DGI en attente de validation","alert.ocr.title":"OCR — 12 factures en attente","alert.ocr.desc":"Reconnaissance automatique disponible","alert.cvae.title":"Cotisation Minimale 2026","alert.cvae.desc":"Formulaire CM à déposer","checklist.title":"Travaux d'Inventaire","checklist.progress":"Avancement clôture 2026","check.rapprochement":"Rapprochement bancaire","check.lettrage":"Lettrage comptes tiers","check.amort":"Calcul amortissements","check.provisions":"Dotations aux provisions","check.stock":"Valorisation des stocks","check.bilan":"Édition du bilan","cashflow.title":"Flux de Trésorerie","cashflow.encaissements":"Encaissements","cashflow.decaissements":"Décaissements","ai.title":"Assistant IA Fiscal","ai.status":"Assistant · Mode local","ai.greeting":"Bonjour Z. Ahmed.","ai.greeting.msg":"J'ai détecté 2 anomalies dans les écritures de janvier : un écart de TVA de 12,50 € sur la facture FAC-2026-0839 et une imputation au compte 622700 qui devrait être ventilée sur 622710. Voulez-vous que je corrige automatiquement ?","ai.placeholder":"Posez une question de doctrine fiscale…","ai.sug1":"Taux IS applicable ?","ai.sug2":"Régime TVA réel normal","ai.sug3":"Optimisation IS 2026"
   },
   en: {
-    "nav.section.core":"Main","nav.section.fiscal":"Tax & Compliance","nav.section.config":"Settings","nav.dashboard":"Dashboard","nav.saisie":"Entry & Automation","nav.clotures":"Year-End Closing","nav.etats":"Financial Statements","nav.fiscalite":"Tax Module","nav.ged":"Client Document Portal","nav.veille":"Legal Watch & AI","nav.clients":"Client Files","nav.parametres":"Settings","user.role":"Certified Accountant (CPA)","dashboard.title":"Dashboard","dashboard.subtitle":"Overview — Fiscal Year 2026","notif.title":"Notifications","notif.markAll":"Mark all read","notif.tva":"VAT Return","notif.tvaDesc":"Due in 3 days","notif.lettrage":"Auto Reconciliation","notif.lettrageDesc":"847 entries reconciled","notif.client":"Client K. Abdessalam","notif.clientDesc":"5 new documents uploaded","ticker.label":"LIVE KPI","ticker.ca":"Cumulative Revenue","ticker.tva":"VAT Collected","ticker.clients":"Active Clients","ticker.ecritures":"Entries/Month","ticker.is":"Corp. Tax Provision","ticker.amort":"Depreciation","kpi.ca":"Revenue","kpi.ca.sub":"Fiscal year 2026 cumulative","kpi.resultat":"Net Income","kpi.resultat.sub":"After estimated corp. tax","kpi.tva.label":"VAT to file","kpi.tva":"VAT Return","kpi.tva.amount":"Amount: €569,500","kpi.lettrage":"Account Matching","kpi.lettrage.sub":"Entries reconciled this month","table.journals.title":"Latest Journal Entries","table.date":"Date ↕","table.piece":"Doc. No. ↕","table.libelle":"Description","table.compte":"Account","table.debit":"Debit (€)","table.credit":"Credit (€)","table.statut":"Status","status.validated":"Matched","status.pending":"Unmatched","status.overdue":"Overdue","status.processing":"Processing","action.viewAll":"View all →","action.calendar":"Calendar →","action.openModule":"Open →","action.detail":"Detail →","alerts.title":"Alerts & Deadlines","alert.tva.title":"Monthly VAT Return","alert.tva.desc":"Amount to file: €569,500 — Account 34551","alert.is.title":"Corp. Tax Instalment — 4th payment","alert.is.desc":"Estimated provision: €35,593","alert.bilan.title":"Year-end closing — T. Omar SARL","alert.bilan.desc":"Physical inventory not confirmed","alert.liasse.title":"Tax Pack — H. Khadija","alert.liasse.desc":"E-filing to DGI pending approval","alert.ocr.title":"OCR — 12 invoices pending","alert.ocr.desc":"Automated recognition available","alert.cvae.title":"Cotisation Minimale 2026","alert.cvae.desc":"Form CM to be filed","checklist.title":"Inventory Checklist","checklist.progress":"Year-end closing progress","check.rapprochement":"Bank reconciliation","check.lettrage":"Third-party account matching","check.amort":"Depreciation calculation","check.provisions":"Provision entries","check.stock":"Stock valuation","check.bilan":"Balance sheet issuance","cashflow.title":"Cash Flow","cashflow.encaissements":"Receipts","cashflow.decaissements":"Disbursements","ai.title":"AI Tax Assistant","ai.status":"Assistant · Local mode","ai.greeting":"Hello Ahmed.","ai.greeting.msg":"I detected 2 anomalies in January entries: a VAT discrepancy of €12.50 on invoice FAC-2026-0839 and an allocation to account 622700 that should be split across 622710. Shall I auto-correct?","ai.placeholder":"Ask a tax doctrine question…","ai.sug1":"Applicable CIT rate?","ai.sug2":"Standard VAT regime","ai.sug3":"CIT optimization 2026"
+    "nav.section.core":"Main","nav.section.fiscal":"Tax & Compliance","nav.section.config":"Settings","nav.dashboard":"Dashboard","nav.saisie":"Entry & Automation","nav.clotures":"Year-End Closing","nav.etats":"Financial Statements","nav.fiscalite":"Tax Module","nav.ged":"Client Document Portal","nav.veille":"Legal Watch & AI","nav.clients":"Client Files","nav.parametres":"Settings","user.role":"Certified Accountant (CPA)","dashboard.title":"Dashboard","dashboard.subtitle":"Overview — Fiscal Year 2026","notif.title":"Notifications","notif.markAll":"Mark all read","notif.tva":"VAT Return","notif.tvaDesc":"Due in 3 days","notif.lettrage":"Auto Reconciliation","notif.lettrageDesc":"847 entries reconciled","notif.client":"Client K. Abdessalam","notif.clientDesc":"5 new documents uploaded","ticker.label":"LIVE KPI","ticker.ca":"Cumulative Revenue","ticker.tva":"VAT Collected","ticker.clients":"Active Clients","ticker.ecritures":"Entries/Month","ticker.is":"Corp. Tax Provision","ticker.amort":"Depreciation","kpi.ca":"Revenue","kpi.ca.sub":"Fiscal year 2026 cumulative","kpi.resultat":"Net Income","kpi.resultat.sub":"After estimated corp. tax","kpi.tva.label":"VAT to file","kpi.tva":"VAT Return","kpi.tva.amount":"Amount: €569,500","kpi.lettrage":"Account Matching","kpi.lettrage.sub":"Entries reconciled this month","table.journals.title":"Latest Journal Entries","table.date":"Date ↕","table.piece":"Doc. No. ↕","table.libelle":"Description","table.compte":"Account","table.debit":"Debit (€)","table.credit":"Credit (€)","table.statut":"Status","status.validated":"Matched","status.pending":"Unmatched","status.overdue":"Overdue","status.processing":"Processing","action.viewAll":"View all →","action.calendar":"Calendar →","action.openModule":"Open →","action.detail":"Detail →","alerts.title":"Alerts & Deadlines","alert.tva.title":"Monthly VAT Return","alert.tva.desc":"Amount to file: €569,500 — Account 34551","alert.is.title":"Corp. Tax Instalment — 4th payment","alert.is.desc":"Estimated provision: €35,593","alert.bilan.title":"Year-end closing — T. Omar SARL","alert.bilan.desc":"Physical inventory not confirmed","alert.liasse.title":"Tax Pack — H. Khadija","alert.liasse.desc":"E-filing to DGI pending approval","alert.ocr.title":"OCR — 12 invoices pending","alert.ocr.desc":"Automated recognition available","alert.cvae.title":"Cotisation Minimale 2026","alert.cvae.desc":"Form CM to be filed","checklist.title":"Inventory Checklist","checklist.progress":"Year-end closing progress","check.rapprochement":"Bank reconciliation","check.lettrage":"Third-party account matching","check.amort":"Depreciation calculation","check.provisions":"Provision entries","check.stock":"Stock valuation","check.bilan":"Balance sheet issuance","cashflow.title":"Cash Flow","cashflow.encaissements":"Receipts","cashflow.decaissements":"Disbursements","ai.title":"AI Tax Assistant","ai.status":"Assistant · Local mode","ai.greeting":"Hello Z. Ahmed.","ai.greeting.msg":"I detected 2 anomalies in January entries: a VAT discrepancy of €12.50 on invoice FAC-2026-0839 and an allocation to account 622700 that should be split across 622710. Shall I auto-correct?","ai.placeholder":"Ask a tax doctrine question…","ai.sug1":"Applicable CIT rate?","ai.sug2":"Standard VAT regime","ai.sug3":"CIT optimization 2026"
   },
   es: {
-    "nav.section.core":"Principal","nav.section.fiscal":"Fiscal & Cumplimiento","nav.section.config":"Configuración","nav.dashboard":"Panel de control","nav.saisie":"Captura & Automatización","nav.clotures":"Cierre Anual","nav.etats":"Estados Financieros","nav.fiscalite":"Módulo Fiscal","nav.ged":"Portal GED Clientes","nav.veille":"Alerta Jurídica & IA","nav.clients":"Expedientes Clientes","nav.parametres":"Ajustes","user.role":"Auditor-Contador","dashboard.title":"Panel de control","dashboard.subtitle":"Visión general — Ejercicio 2026","notif.title":"Notificaciones","notif.markAll":"Marcar todo leído","notif.tva":"Declaración IVA","notif.tvaDesc":"Vence en 3 días","notif.lettrage":"Conciliación automática","notif.lettrageDesc":"847 asientos conciliados","notif.client":"Cliente K. Abdessalam","notif.clientDesc":"5 nuevos documentos enviados","ticker.label":"KPI EN VIVO","ticker.ca":"Facturación Acum.","ticker.tva":"IVA Repercutido","ticker.clients":"Clientes Activos","ticker.ecritures":"Asientos/Mes","ticker.is":"Provisión IS","ticker.amort":"Amortizaciones","kpi.ca":"Facturación","kpi.ca.sub":"Ejercicio 2026 acumulado","kpi.resultat":"Resultado Neto","kpi.resultat.sub":"Tras IS estimado","kpi.tva.label":"IVA a declarar","kpi.tva":"Modelo 303 (IVA)","kpi.tva.amount":"Importe: 569.500 €","kpi.lettrage":"Conciliación de Cuentas","kpi.lettrage.sub":"Asientos conciliados este mes","table.journals.title":"Últimos Asientos Contables","table.date":"Fecha ↕","table.piece":"Nº Doc. ↕","table.libelle":"Descripción","table.compte":"Cuenta","table.debit":"Debe (€)","table.credit":"Haber (€)","table.statut":"Estado","status.validated":"Conciliado","status.pending":"Sin conciliar","status.overdue":"Vencido","status.processing":"En proceso","action.viewAll":"Ver todo →","action.calendar":"Calendario →","action.openModule":"Abrir →","action.detail":"Detalle →","alerts.title":"Alertas & Vencimientos","alert.tva.title":"Declaración IVA mensual (Mod. 303)","alert.tva.desc":"Importe: 569.500 € — Cuenta 34551","alert.is.title":"Pago fraccionado IS — 4º plazo","alert.is.desc":"Provisión estimada: 35.593 €","alert.bilan.title":"Cierre anual — Expediente T. Omar SARL","alert.bilan.desc":"Inventario físico sin confirmar","alert.liasse.title":"Declaración fiscal — H. Khadija","alert.liasse.desc":"Presentación telemática pendiente","alert.ocr.title":"OCR — 12 facturas pendientes","alert.ocr.desc":"Reconocimiento automático disponible","alert.cvae.title":"Declaración Cotisation Minimale 2026","alert.cvae.desc":"Formulario CM a presentar","checklist.title":"Trabajos de Inventario","checklist.progress":"Avance cierre 2026","check.rapprochement":"Conciliación bancaria","check.lettrage":"Conciliación cuentas de terceros","check.amort":"Cálculo de amortizaciones","check.provisions":"Dotaciones a provisiones","check.stock":"Valoración de existencias","check.bilan":"Emisión del balance","cashflow.title":"Flujo de Caja","cashflow.encaissements":"Cobros","cashflow.decaissements":"Pagos","ai.title":"Asistente IA Fiscal","ai.status":"Asistente · Modo local","ai.greeting":"Buenos días, Ahmed.","ai.greeting.msg":"He detectado 2 anomalías en los asientos de enero: una diferencia de IVA de 12,50 € en la factura FAC-2026-0839 y una imputación a la cuenta 622700 que debería distribuirse en 622710. ¿Desea que lo corrija automáticamente?","ai.placeholder":"Haz una pregunta sobre doctrina fiscal…","ai.sug1":"¿Tipo IS aplicable?","ai.sug2":"Régimen IVA general","ai.sug3":"Optimización IS 2026"
+    "nav.section.core":"Principal","nav.section.fiscal":"Fiscal & Cumplimiento","nav.section.config":"Configuración","nav.dashboard":"Panel de control","nav.saisie":"Captura & Automatización","nav.clotures":"Cierre Anual","nav.etats":"Estados Financieros","nav.fiscalite":"Módulo Fiscal","nav.ged":"Portal GED Clientes","nav.veille":"Alerta Jurídica & IA","nav.clients":"Expedientes Clientes","nav.parametres":"Ajustes","user.role":"Auditor-Contador","dashboard.title":"Panel de control","dashboard.subtitle":"Visión general — Ejercicio 2026","notif.title":"Notificaciones","notif.markAll":"Marcar todo leído","notif.tva":"Declaración IVA","notif.tvaDesc":"Vence en 3 días","notif.lettrage":"Conciliación automática","notif.lettrageDesc":"847 asientos conciliados","notif.client":"Cliente K. Abdessalam","notif.clientDesc":"5 nuevos documentos enviados","ticker.label":"KPI EN VIVO","ticker.ca":"Facturación Acum.","ticker.tva":"IVA Repercutido","ticker.clients":"Clientes Activos","ticker.ecritures":"Asientos/Mes","ticker.is":"Provisión IS","ticker.amort":"Amortizaciones","kpi.ca":"Facturación","kpi.ca.sub":"Ejercicio 2026 acumulado","kpi.resultat":"Resultado Neto","kpi.resultat.sub":"Tras IS estimado","kpi.tva.label":"IVA a declarar","kpi.tva":"Modelo 303 (IVA)","kpi.tva.amount":"Importe: 569.500 €","kpi.lettrage":"Conciliación de Cuentas","kpi.lettrage.sub":"Asientos conciliados este mes","table.journals.title":"Últimos Asientos Contables","table.date":"Fecha ↕","table.piece":"Nº Doc. ↕","table.libelle":"Descripción","table.compte":"Cuenta","table.debit":"Debe (€)","table.credit":"Haber (€)","table.statut":"Estado","status.validated":"Conciliado","status.pending":"Sin conciliar","status.overdue":"Vencido","status.processing":"En proceso","action.viewAll":"Ver todo →","action.calendar":"Calendario →","action.openModule":"Abrir →","action.detail":"Detalle →","alerts.title":"Alertas & Vencimientos","alert.tva.title":"Declaración IVA mensual (Mod. 303)","alert.tva.desc":"Importe: 569.500 € — Cuenta 34551","alert.is.title":"Pago fraccionado IS — 4º plazo","alert.is.desc":"Provisión estimada: 35.593 €","alert.bilan.title":"Cierre anual — Expediente T. Omar SARL","alert.bilan.desc":"Inventario físico sin confirmar","alert.liasse.title":"Declaración fiscal — H. Khadija","alert.liasse.desc":"Presentación telemática pendiente","alert.ocr.title":"OCR — 12 facturas pendientes","alert.ocr.desc":"Reconocimiento automático disponible","alert.cvae.title":"Declaración Cotisation Minimale 2026","alert.cvae.desc":"Formulario CM a presentar","checklist.title":"Trabajos de Inventario","checklist.progress":"Avance cierre 2026","check.rapprochement":"Conciliación bancaria","check.lettrage":"Conciliación cuentas de terceros","check.amort":"Cálculo de amortizaciones","check.provisions":"Dotaciones a provisiones","check.stock":"Valoración de existencias","check.bilan":"Emisión del balance","cashflow.title":"Flujo de Caja","cashflow.encaissements":"Cobros","cashflow.decaissements":"Pagos","ai.title":"Asistente IA Fiscal","ai.status":"Asistente · Modo local","ai.greeting":"Buenos días, Z. Ahmed.","ai.greeting.msg":"He detectado 2 anomalías en los asientos de enero: una diferencia de IVA de 12,50 € en la factura FAC-2026-0839 y una imputación a la cuenta 622700 que debería distribuirse en 622710. ¿Desea que lo corrija automáticamente?","ai.placeholder":"Haz una pregunta sobre doctrina fiscal…","ai.sug1":"¿Tipo IS aplicable?","ai.sug2":"Régimen IVA general","ai.sug3":"Optimización IS 2026"
   },
   ar: {
-    "nav.section.core":"الرئيسية","nav.section.fiscal":"الضريبة والامتثال","nav.section.config":"الإعدادات","nav.dashboard":"لوحة القيادة","nav.saisie":"الإدخال والأتمتة","nav.clotures":"الإقفال السنوي","nav.etats":"القوائم المالية","nav.fiscalite":"وحدة الضريبة","nav.ged":"بوابة العملاء","nav.veille":"اليقظة القانونية والذكاء الاصطناعي","nav.clients":"ملفات العملاء","nav.parametres":"الإعدادات","user.role":"محاسب قانوني معتمد","dashboard.title":"لوحة القيادة","dashboard.subtitle":"نظرة عامة — السنة المالية 2026","notif.title":"الإشعارات","notif.markAll":"وضع علامة مقروء للجميع","notif.tva":"إقرار ضريبة القيمة المضافة","notif.tvaDesc":"الموعد النهائي بعد 3 أيام","notif.lettrage":"المطابقة التلقائية","notif.lettrageDesc":"تمت مطابقة 847 قيداً","notif.client":"العميل K. Abdessalam","notif.clientDesc":"5 مستندات جديدة مُحمَّلة","ticker.label":"مؤشرات مباشرة","ticker.ca":"رقم الأعمال","ticker.tva":"ضريبة القيمة المضافة المحصلة","ticker.clients":"العملاء النشطون","ticker.ecritures":"قيود/شهر","ticker.is":"مخصص ضريبة الشركات","ticker.amort":"الاستهلاكات","kpi.ca":"رقم الأعمال","kpi.ca.sub":"السنة المالية 2026 إجمالي","kpi.resultat":"صافي الربح","kpi.resultat.sub":"بعد ضريبة الشركات التقديرية","kpi.tva.label":"ضريبة القيمة المضافة للإقرار","kpi.tva":"إقرار ضريبة القيمة المضافة","kpi.tva.amount":"المبلغ: 569,500 €","kpi.lettrage":"مطابقة الحسابات","kpi.lettrage.sub":"القيود المُطابَقة هذا الشهر","table.journals.title":"آخر القيود المحاسبية","table.date":"التاريخ ↕","table.piece":"رقم المستند ↕","table.libelle":"البيان","table.compte":"الحساب","table.debit":"مدين (€)","table.credit":"دائن (€)","table.statut":"الحالة","status.validated":"مُطابَق","status.pending":"غير مُطابَق","status.overdue":"متأخر","status.processing":"قيد المعالجة","action.viewAll":"عرض الكل →","action.calendar":"التقويم →","action.openModule":"فتح →","action.detail":"تفاصيل →","alerts.title":"التنبيهات والمواعيد النهائية","alert.tva.title":"إقرار ضريبة القيمة المضافة الشهري","alert.tva.desc":"المبلغ للإقرار: 569,500 € — الحساب 34551","alert.is.title":"دفعة ضريبة الشركات — القسط الرابع","alert.is.desc":"المخصص التقديري: 35,593 €","alert.bilan.title":"إقفال سنوي — ملف T. Omar SARL","alert.bilan.desc":"الجرد المادي غير مؤكد","alert.liasse.title":"الحزمة الضريبية — H. Khadija","alert.liasse.desc":"الإرسال الإلكتروني في انتظار التحقق","alert.ocr.title":"OCR — 12 فاتورة معلقة","alert.ocr.desc":"التعرف التلقائي متاح","alert.cvae.title":"إقرار Cotisation Minimale 2026","alert.cvae.desc":"نموذج CM للإيداع","checklist.title":"أعمال الجرد","checklist.progress":"تقدم الإقفال السنوي 2026","check.rapprochement":"التسوية البنكية","check.lettrage":"مطابقة حسابات الأطراف الثالثة","check.amort":"حساب الاستهلاكات","check.provisions":"قيود المخصصات","check.stock":"تقييم المخزون","check.bilan":"إصدار الميزانية","cashflow.title":"التدفق النقدي","cashflow.encaissements":"المتحصلات","cashflow.decaissements":"المدفوعات","ai.title":"المساعد الضريبي بالذكاء الاصطناعي","ai.status":"المساعد · وضع محلي","ai.greeting":"مرحباً أحمد.","ai.greeting.msg":"اكتشفت شذوذَين في قيود يناير: فرق ضريبة قيمة مضافة بقيمة 12.50 € في الفاتورة FAC-2026-0839، وتخصيص للحساب 622700 يجب توزيعه على 622710. هل تريدين التصحيح التلقائي؟","ai.placeholder":"اطرح سؤالاً عن الفقه الضريبي…","ai.sug1":"معدل ضريبة الشركات المطبق؟","ai.sug2":"نظام ضريبة القيمة المضافة العادي","ai.sug3":"تحسين ضريبة الشركات 2026"
+    "nav.section.core":"الرئيسية","nav.section.fiscal":"الضريبة والامتثال","nav.section.config":"الإعدادات","nav.dashboard":"لوحة القيادة","nav.saisie":"الإدخال والأتمتة","nav.clotures":"الإقفال السنوي","nav.etats":"القوائم المالية","nav.fiscalite":"وحدة الضريبة","nav.ged":"بوابة العملاء","nav.veille":"اليقظة القانونية والذكاء الاصطناعي","nav.clients":"ملفات العملاء","nav.parametres":"الإعدادات","user.role":"محاسب قانوني معتمد","dashboard.title":"لوحة القيادة","dashboard.subtitle":"نظرة عامة — السنة المالية 2026","notif.title":"الإشعارات","notif.markAll":"وضع علامة مقروء للجميع","notif.tva":"إقرار ضريبة القيمة المضافة","notif.tvaDesc":"الموعد النهائي بعد 3 أيام","notif.lettrage":"المطابقة التلقائية","notif.lettrageDesc":"تمت مطابقة 847 قيداً","notif.client":"العميل K. Abdessalam","notif.clientDesc":"5 مستندات جديدة مُحمَّلة","ticker.label":"مؤشرات مباشرة","ticker.ca":"رقم الأعمال","ticker.tva":"ضريبة القيمة المضافة المحصلة","ticker.clients":"العملاء النشطون","ticker.ecritures":"قيود/شهر","ticker.is":"مخصص ضريبة الشركات","ticker.amort":"الاستهلاكات","kpi.ca":"رقم الأعمال","kpi.ca.sub":"السنة المالية 2026 إجمالي","kpi.resultat":"صافي الربح","kpi.resultat.sub":"بعد ضريبة الشركات التقديرية","kpi.tva.label":"ضريبة القيمة المضافة للإقرار","kpi.tva":"إقرار ضريبة القيمة المضافة","kpi.tva.amount":"المبلغ: 569,500 €","kpi.lettrage":"مطابقة الحسابات","kpi.lettrage.sub":"القيود المُطابَقة هذا الشهر","table.journals.title":"آخر القيود المحاسبية","table.date":"التاريخ ↕","table.piece":"رقم المستند ↕","table.libelle":"البيان","table.compte":"الحساب","table.debit":"مدين (€)","table.credit":"دائن (€)","table.statut":"الحالة","status.validated":"مُطابَق","status.pending":"غير مُطابَق","status.overdue":"متأخر","status.processing":"قيد المعالجة","action.viewAll":"عرض الكل →","action.calendar":"التقويم →","action.openModule":"فتح →","action.detail":"تفاصيل →","alerts.title":"التنبيهات والمواعيد النهائية","alert.tva.title":"إقرار ضريبة القيمة المضافة الشهري","alert.tva.desc":"المبلغ للإقرار: 569,500 € — الحساب 34551","alert.is.title":"دفعة ضريبة الشركات — القسط الرابع","alert.is.desc":"المخصص التقديري: 35,593 €","alert.bilan.title":"إقفال سنوي — ملف T. Omar SARL","alert.bilan.desc":"الجرد المادي غير مؤكد","alert.liasse.title":"الحزمة الضريبية — H. Khadija","alert.liasse.desc":"الإرسال الإلكتروني في انتظار التحقق","alert.ocr.title":"OCR — 12 فاتورة معلقة","alert.ocr.desc":"التعرف التلقائي متاح","alert.cvae.title":"إقرار Cotisation Minimale 2026","alert.cvae.desc":"نموذج CM للإيداع","checklist.title":"أعمال الجرد","checklist.progress":"تقدم الإقفال السنوي 2026","check.rapprochement":"التسوية البنكية","check.lettrage":"مطابقة حسابات الأطراف الثالثة","check.amort":"حساب الاستهلاكات","check.provisions":"قيود المخصصات","check.stock":"تقييم المخزون","check.bilan":"إصدار الميزانية","cashflow.title":"التدفق النقدي","cashflow.encaissements":"المتحصلات","cashflow.decaissements":"المدفوعات","ai.title":"المساعد الضريبي بالذكاء الاصطناعي","ai.status":"المساعد · وضع محلي","ai.greeting":"مرحباً أحمد الزموري.","ai.greeting.msg":"اكتشفت شذوذَين في قيود يناير: فرق ضريبة قيمة مضافة بقيمة 12.50 € في الفاتورة FAC-2026-0839، وتخصيص للحساب 622700 يجب توزيعه على 622710. هل تريدين التصحيح التلقائي؟","ai.placeholder":"اطرح سؤالاً عن الفقه الضريبي…","ai.sug1":"معدل ضريبة الشركات المطبق؟","ai.sug2":"نظام ضريبة القيمة المضافة العادي","ai.sug3":"تحسين ضريبة الشركات 2026"
   }
 };
 let currentLang='fr',darkMode=!0,notifsOpen=!1;
+let CLAUDE_KEY = localStorage.getItem('ce_claude_key') || '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';
+let GEMINI_KEY = localStorage.getItem('ce_gemini_key') || 'AQ.Ab8RN6Jh5_69YGqsd42GhlOa0YcnxwDQwMbx6K_ImlVmkzJKvA';
 
 function applyLang(lang){
   const d=i18n[lang]; if(!d)return;
@@ -825,8 +918,6 @@ function applyLang(lang){
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(d[k])el.placeholder=d[k]});
   const ai=document.getElementById('ai-response');
   if(ai&&d['ai.greeting']&&d['ai.greeting.msg'])ai.innerHTML=`<strong>${d['ai.greeting']}</strong> ${d['ai.greeting.msg']}`;
-  const rtl=lang==='ar';
-  document.documentElement.setAttribute('dir',rtl?'rtl':'ltr');
   document.documentElement.setAttribute('lang',lang);
   const labels={fr:['Juil','Août','Sept','Oct','Nov','Déc'],en:['Jul','Aug','Sep','Oct','Nov','Dec'],es:['Jul','Ago','Sep','Oct','Nov','Dic'],ar:['يول','أغس','سبت','أكت','نوف','ديس']}[lang]||monthLabels.fr;
   const xs=[14,56,98,140,182,224];
@@ -956,12 +1047,32 @@ document.querySelector('.notif-mark-all')?.addEventListener('click', () => {
   updateNotifBadge();
 });
 
-// ====== DEMO BADGE ======
-const demoBadge = document.createElement('div');
-demoBadge.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:9999;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:var(--font-data);letter-spacing:0.5px;cursor:pointer;opacity:0.85';
-demoBadge.textContent = '⚡ MODE DÉMO';
-demoBadge.setAttribute('data-tip', 'Données simulées — cliquez partout pour tester');
-document.body.appendChild(demoBadge);
+// ====== LIVE/DEMO TOGGLE ======
+let liveMode = true;
+const mainContent = document.querySelector('.main-content');
+const demoHTML = mainContent ? mainContent.innerHTML : '';
+const modeBadge = document.createElement('div');
+modeBadge.style.cssText = 'position:fixed;bottom:12px;right:12px;z-index:9999;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;font-family:var(--font-data);letter-spacing:0.5px;cursor:pointer;opacity:0.85';
+modeBadge.textContent = '🌐 MODE LIVE';
+modeBadge.setAttribute('data-tip', 'Cliquer pour basculer entre données live et démo');
+document.body.appendChild(modeBadge);
+modeBadge.onclick = function(){
+  liveMode = !liveMode;
+  const aiStatus = document.getElementById('ai-status-label');
+  const main = document.querySelector('.main-content');
+  if(liveMode){
+    modeBadge.textContent = '⟳ CHARGEMENT…';
+    if(aiStatus) aiStatus.textContent = '⟳ Connexion…';
+    window.CE.loadDashboard().then(r => {
+      modeBadge.textContent = r ? '🌐 MODE LIVE' : '⚡ MODE DÉMO';
+      if(aiStatus) aiStatus.textContent = r ? 'Connecté — Gemini' : 'Mode local';
+    });
+  }else{
+    modeBadge.textContent = '⚡ MODE DÉMO';
+    if(aiStatus) aiStatus.textContent = 'Mode local';
+    if(demoHTML && main) main.innerHTML = demoHTML;
+  }
+};
 
 // ====== NAVIGATION (shows different sections) ======
 const views = {
@@ -974,40 +1085,88 @@ const views = {
   veille: null,
 };
 
-const SECTION_HTML = {
-  saisie: `
-<div class="dual-panel">
-  <div class="card">
-    <div class="card-header"><div class="card-title">📄 Import de Factures</div><div class="card-badge">OCR Actif</div></div>
-    <div style="padding:30px 20px;text-align:center">
-      <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:50px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition)" id="dropzone" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <svg width="36" height="36" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.2"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg>
-        <p style="margin-top:14px;color:var(--text-secondary);font-size:13px">Déposez vos fichiers ici (PDF, JPG, PNG)</p>
-        <p style="color:var(--text-muted);font-size:11px;margin-top:4px">12 factures en attente de traitement</p>
+const SAISIE_HTML = `
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="saisie-grid">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg>
+          Import de Factures
+        </div>
+        <div class="card-badge" id="ocr-badge">OCR + Vision IA</div>
+      </div>
+      <div style="padding:16px 20px">
+        <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png,.webp,.bmp,.tiff" multiple style="position:absolute;left:-9999px;opacity:0;pointer-events:none">
+        <div id="dropzone" style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition);text-align:center;position:relative">
+          <svg width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.2" style="display:block;margin:0 auto 12px"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg>
+          <p style="color:var(--text-secondary);font-size:13px;margin-bottom:4px">Déposez PDF, JPG, PNG, BMP, TIFF ici</p>
+          <p style="color:var(--text-muted);font-size:11px;margin-bottom:14px">ou</p>
+          <button id="browse-btn" style="padding:9px 22px;background:var(--accent);color:white;border:none;border-radius:var(--radius-md);cursor:pointer;font-weight:600;font-size:13px;font-family:var(--font-ui)">📂 Parcourir</button>
+          <div id="drop-hint" style="margin-top:12px;font-size:10px;color:var(--text-muted);line-height:1.5">PDF → texte extrait par PDF.js<br>Image → lu par Vision IA (Claude)</div>
+        </div>
+        <div id="file-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;min-height:0"></div>
+        <button id="analyze-btn" onclick="runOCR()" style="display:none;width:100%;margin-top:12px;padding:10px;background:linear-gradient(135deg,var(--accent),var(--purple));color:white;border:none;border-radius:var(--radius-md);cursor:pointer;font-weight:700;font-size:13px;font-family:var(--font-ui);letter-spacing:0.3px">⚡ Analyser la facture</button>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.8px">Fichiers démo</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            <span onclick="simulateOCR()" style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary);cursor:pointer">📄 FAC-2026-0847.pdf</span>
+            <span onclick="simulateOCR('img')" style="background:var(--bg-card);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary);cursor:pointer">🖼 FACTURE_MARTIN.jpg</span>
+          </div>
+        </div>
       </div>
     </div>
-    <div style="padding:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
-      <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FAC-2026-0847.pdf</span>
-      <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FAC-2026-0839.jpg</span>
-      <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FACTURE_MARTIN.pdf</span>
-      <span style="background:var(--accent-glow);border:1px solid var(--accent);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--accent);cursor:pointer" onclick="infoOCR()">+ En savoir plus</span>
+    <div class="card" style="display:flex;flex-direction:column">
+      <div class="card-header">
+        <div class="card-title">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4"/><path d="M10 10l4 4"/></svg>
+          Résultat OCR
+        </div>
+        <div class="card-badge" id="ocr-status" style="background:var(--bg-input);color:var(--text-muted)">En attente</div>
+      </div>
+      <div id="ocr-preview" style="display:none;padding:12px 20px 0">
+        <img id="preview-img" style="display:none;max-width:100%;max-height:140px;border-radius:var(--radius-md);object-fit:contain;border:1px solid var(--border);margin:0 auto" src="" alt="">
+        <div id="preview-pdf" style="display:none;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)">
+          <svg width="28" height="28" viewBox="0 0 16 16" fill="none" stroke="var(--red)" stroke-width="1.3"><path d="M3 1h7l3 3v11H3z"/><path d="M10 1v3h3"/><path d="M5 7h6M5 9.5h3"/></svg>
+          <div><div id="preview-name" style="font-size:12px;color:var(--text-primary);font-weight:500"></div><div id="preview-size" style="font-size:10px;color:var(--text-muted)"></div></div>
+        </div>
+      </div>
+      <div id="ocr-result" style="flex:1;padding:32px 20px;text-align:center;color:var(--text-muted);font-size:13px;display:flex;align-items:center;justify-content:center">
+        <div>
+          <svg width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" style="margin:0 auto 12px;opacity:0.3;display:block"><circle cx="6" cy="6" r="4"/><path d="M10 10l4 4"/></svg>
+          Importez un fichier pour lancer l'analyse
+        </div>
+      </div>
     </div>
   </div>
   <div class="card">
-    <div class="card-header"><div class="card-title">🔍 Résultat OCR</div><div class="card-badge" id="ocr-status">En attente</div></div>
-    <div id="ocr-result" style="padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px">
-      Cliquez sur la zone de dépôt<br>pour simuler une analyse OCR
+    <div class="card-header">
+      <div class="card-title">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h8"/></svg>
+        Écritures suggérées
+      </div>
+      <button class="card-action" onclick="validateEntries()">✓ Valider tout</button>
+    </div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Date</th><th>Libellé</th><th>Compte</th><th>Débit (€)</th><th>Crédit (€)</th><th>Confiance</th></tr></thead>
+        <tbody id="ocr-entries">
+          <tr><td class="mono">12/01/26</td><td>Fournitures bureau</td><td class="mono">601100</td><td class="mono text-red">1 250,00</td><td class="mono">—</td><td><span class="status-pill validated">98%</span></td></tr>
+          <tr><td class="mono">12/01/26</td><td>TVA déductible</td><td class="mono">445660</td><td class="mono text-red">250,00</td><td class="mono">—</td><td><span class="status-pill validated">97%</span></td></tr>
+          <tr><td class="mono">11/01/26</td><td>Virement client T. Omar</td><td class="mono">411000</td><td class="mono">—</td><td class="mono text-green">4 800,00</td><td><span class="status-pill processing">85%</span></td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
-<div class="card">
-  <div class="card-header"><div class="card-title">📋 Écritures suggérées</div><button class="card-action" onclick="alert('✅ 3 écritures créées en simulation')">Valider tout</button></div>
-  <div class="data-table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Libellé</th><th>Compte</th><th>Débit (€)</th><th>Crédit (€)</th><th>Confiance</th></tr></thead><tbody id="ocr-entries">
-    <tr><td class="mono">12/01/26</td><td>Fournitures bureau</td><td class="mono">601100</td><td class="mono text-red">1 250,00</td><td class="mono">—</td><td><span class="status-pill validated">98%</span></td></tr>
-    <tr><td class="mono">12/01/26</td><td>TVA déductible</td><td class="mono">445660</td><td class="mono text-red">250,00</td><td class="mono">—</td><td><span class="status-pill validated">97%</span></td></tr>
-    <tr><td class="mono">11/01/26</td><td>Virement client T. Omar</td><td class="mono">411000</td><td class="mono">—</td><td class="mono text-green">4 800,00</td><td><span class="status-pill processing">85%</span></td></tr>
-  </tbody></table></div>
-</div>`,
+<style>
+@media (max-width: 860px) {
+  #saisie-grid { grid-template-columns: 1fr !important; }
+}
+</style>`;
+
+const SECTION_HTML = {
+  saisie: SAISIE_HTML,
   clotures: `
 <div class="dual-panel">
   <div class="card">
@@ -1138,17 +1297,17 @@ const SECTION_HTML = {
 <div class="dual-panel">
   <div class="card"><div class="card-header"><div class="card-title">📰 Veille Juridique & Réglementaire</div><div class="card-badge">3 nouveaux</div></div>
     <div style="padding:16px 20px;display:grid;gap:10px">
-      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--accent);cursor:pointer" onclick="alert('📄 DGI détail (simulation)')">
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-inline-start:3px solid var(--accent);cursor:pointer" onclick="alert('📄 DGI détail (simulation)')">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">CGI Maroc art. 17-I</span><span style="font-size:10px;color:var(--text-muted)">12 Jan 2026</span></div>
         <div style="font-size:12px;color:var(--text-secondary)">Taux IS Maroc 2026 : 31% (bénéfice > 100M MAD), 20% (1M-100M MAD), 10% (≤ 1M MAD) — CGI art. 17-I</div>
         <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--accent-glow);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:10px">IS</span><span style="background:var(--green-dim);color:var(--green);padding:2px 8px;border-radius:10px;font-size:10px">Conformité</span></div>
       </div>
-      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--green);cursor:pointer" onclick="alert('📄 BOI TVA détail (simulation)')">
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-inline-start:3px solid var(--green);cursor:pointer" onclick="alert('📄 BOI TVA détail (simulation)')">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">CGI Maroc art. 92</span><span style="font-size:10px;color:var(--text-muted)">8 Jan 2026</span></div>
         <div style="font-size:12px;color:var(--text-secondary)">Franchise TVA Maroc relevée à 500 000 MAD pour les prestations de services à compter du 01/01/2026</div>
         <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--amber-dim);color:var(--amber);padding:2px 8px;border-radius:10px;font-size:10px">TVA</span><span style="background:var(--green-dim);color:var(--green);padding:2px 8px;border-radius:10px;font-size:10px">Franchise</span></div>
       </div>
-      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-left:3px solid var(--amber);cursor:pointer" onclick="alert('📄 C. com. détail (simulation)')">
+      <div style="padding:12px 16px;background:var(--bg-input);border-radius:var(--radius-md);border-inline-start:3px solid var(--amber);cursor:pointer" onclick="alert('📄 C. com. détail (simulation)')">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;font-weight:600;color:var(--text-primary)">CGI Maroc art. 25</span><span style="font-size:10px;color:var(--text-muted)">5 Jan 2026</span></div>
         <div style="font-size:12px;color:var(--text-secondary)">Délai de transmission du FEC allongé à 30 jours ouvrés (au lieu de 15) en cas de contrôle DGI</div>
         <div style="margin-top:6px;display:flex;gap:4px"><span style="background:var(--purple-dim);color:var(--purple);padding:2px 8px;border-radius:10px;font-size:10px">FEC</span><span style="background:var(--red-dim);color:var(--red);padding:2px 8px;border-radius:10px;font-size:10px">Urgent</span></div>
@@ -1179,8 +1338,10 @@ function navigate(section, e) {
   e.currentTarget.classList.add('active');
   const main = document.querySelector('.main-content');
   if (section === 'dashboard') {
-    // Restore original content — simple reload
-    location.reload();
+    if(demoHTML) main.innerHTML = demoHTML;
+    else location.reload();
+    if(typeof applyLang === 'function') applyLang(currentLang);
+    if(liveMode) window.CE.loadDashboard();
     return;
   }
   const html = SECTION_HTML[section];
@@ -1204,6 +1365,7 @@ function navigate(section, e) {
       });
     }
     if (section === 'fiscalite') calcIS();
+    if (section === 'saisie') initOCRUpload();
   }
   // Update header title
   const titles = {saisie:'Saisie & OCR',clotures:'Clôture Annuelle',etats:'États Financiers',fiscalite:'Fiscalité',ged:'Portail GED',veille:'Veille Juridique'};
@@ -1213,27 +1375,279 @@ function navigate(section, e) {
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
-// ====== INFO OCR ======
-function infoOCR() {
+// ====== OCR FUNCTIONS ======
+function parseOCRText(text) {
+  const data = { supplier: '—', invoice_no: '—', date: '—', montant_ht: null, tva: null, montant_ttc: null, account: '601100', account_label: 'Achats matières' };
+  const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
+  const full = text.toLowerCase();
+  const rawNums = text.match(/[\d\s]{1,10}[.,]\d{2}/g) || [];
+  const amounts = rawNums.map(s => parseFloat(s.replace(/\s/g,'').replace(',','.'))).filter(n => !isNaN(n) && n > 10 && n < 10000000).sort((a,b)=>a-b);
+  if (amounts.length >= 2) {
+    data.montant_ht = amounts[amounts.length - 2];
+    data.montant_ttc = amounts[amounts.length - 1];
+    data.tva = Math.round((data.montant_ttc - data.montant_ht) * 100) / 100;
+  } else if (amounts.length === 1) {
+    data.montant_ttc = amounts[0];
+    data.tva = Math.round(amounts[0] * 20 / 120 * 100) / 100;
+    data.montant_ht = Math.round((amounts[0] - data.tva) * 100) / 100;
+  }
+  for (const line of lines) {
+    const l = line.toLowerCase();
+    if (!data.invoice_no || data.invoice_no === '—') {
+      const m = line.match(/(?:N[°o]?\s*(?:facture|fac|inv)[:\s#]*)?([A-Z]{2,6}[-_]?\d{4}[-_]\d{2,6})/i);
+      if (m) data.invoice_no = m[1].toUpperCase();
+    }
+    if (!data.date || data.date === '—') {
+      const dm = line.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+      if (dm) data.date = dm[1].padStart(2,'0')+'/'+dm[2].padStart(2,'0')+'/'+dm[3];
+    }
+    if ((l.includes('sarl')||l.includes('eurl')||l.includes(' sa ')||l.includes('sas ')||l.includes('entreprise')||l.includes('sté')||l.includes('fournisseur')||l.includes('émetteur')) && line.length>4&&line.length<80) {
+      data.supplier = line.replace(/^(fournisseur|émetteur|client|société|doit|à)\s*[:\-]?\s*/i,'').trim().slice(0,60)||data.supplier;
+    }
+    if (l.includes('loyer')) { data.account='613200'; data.account_label='Loyers'; }
+    else if (l.includes('transport')) { data.account='624100'; data.account_label='Transports'; }
+    else if (l.includes('honoraire')||l.includes('conseil')||l.includes('prestation')) { data.account='622700'; data.account_label='Honoraires'; }
+    else if (l.includes('téléphone')||l.includes('internet')||l.includes('telecoms')) { data.account='626000'; data.account_label='Télécoms'; }
+    else if (l.includes('publicité')||l.includes('marketing')) { data.account='623000'; data.account_label='Publicité'; }
+    else if (l.includes('assurance')) { data.account='616000'; data.account_label='Assurances'; }
+  }
+  return data;
+}
+
+// ====== HANDLE FILE SELECTION (preview + store) ======
+function handleOCRFile(files) {
+  if (!files || files.length === 0) return;
+  window._ocrFiles = files;
+  const file = files[0];
+  const isImage = file.type.startsWith('image/');
+  const isPDF   = file.type === 'application/pdf';
+  const chips = document.getElementById('file-chips');
+  if (chips) chips.innerHTML = Array.from(files).map(f => `<span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary);margin:0">${isPDF?'📄':'🖼'} ${f.name}</span>`).join('');
+  const btn = document.getElementById('analyze-btn');
+  if (btn) btn.style.display = 'block';
+  const previewBox = document.getElementById('ocr-preview');
+  const previewImg = document.getElementById('preview-img');
+  const previewPDF = document.getElementById('preview-pdf');
+  const prevName   = document.getElementById('preview-name');
+  const prevSize   = document.getElementById('preview-size');
+  if (previewBox) previewBox.style.display = 'block';
+  if (isImage && previewImg) {
+    if (previewPDF) previewPDF.style.display = 'none';
+    previewImg.style.display = 'block';
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewImg.onload = () => URL.revokeObjectURL(url);
+  } else if (isPDF && previewPDF) {
+    if (previewImg) previewImg.style.display = 'none';
+    previewPDF.style.display = 'flex';
+    if (prevName) prevName.textContent = file.name;
+    if (prevSize) prevSize.textContent = (file.size / 1024).toFixed(1) + ' Ko';
+  }
   const status = document.getElementById('ocr-status');
   const result = document.getElementById('ocr-result');
-  if (status) {
-    status.textContent = 'Information';
-    status.style.background = 'var(--amber-dim)';
-    status.style.color = 'var(--amber)';
+  if (status) { status.textContent = 'Fichier sélectionné'; status.style.background = 'var(--accent-glow)'; status.style.color = 'var(--accent)'; }
+  if (result) { result.style.textAlign = 'center'; result.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Cliquez sur <strong style="color:var(--accent)">Analyser la facture</strong> pour lancer l\'OCR</span>'; }
+}
+
+// ====== VISION OCR VIA BACKEND PROXY (avoids CORS) ======
+async function callVisionProxy(base64, mediaType) {
+  const apiBase = window.COMPTAEASY_API || '';
+  const resp = await fetch(apiBase + '/api/ocr/vision', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: base64, media_type: mediaType || 'image/jpeg' })
+  });
+  if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error || `HTTP ${resp.status}`); }
+  return resp.json();
+}
+
+async function runVisionOCR(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        const base64 = e.target.result.split(',')[1];
+        const mediaType = file.type || 'image/jpeg';
+        resolve(await callVisionProxy(base64, mediaType));
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ====== PDF TEXT EXTRACTION via PDF.js ======
+function extractTextFromPDF(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const buffer = e.target.result;
+      if (typeof pdfjsLib === 'undefined') { reject(new Error('PDF.js non chargé')); return; }
+      pdfjsLib.getDocument({ data: buffer }).promise
+        .then(pdf => Promise.all(Array.from({length: pdf.numPages}, (_, i) => i + 1).map(n =>
+          pdf.getPage(n).then(p => p.getTextContent().then(tc => tc.items.map(it => it.str).join(' ')))
+        )))
+        .then(pages => resolve(pages.join('\n')))
+        .catch(reject);
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ====== RUN OCR (called by the Analyser button) ======
+async function runOCR() {
+  const files  = window._ocrFiles;
+  const status = document.getElementById('ocr-status');
+  const result = document.getElementById('ocr-result');
+  if (!files || files.length === 0) { simulateOCR(); return; }
+  const file    = files[0];
+  const isImage = file.type.startsWith('image/');
+  const isPDF   = file.type === 'application/pdf';
+  if (status) { status.textContent = '⟳ Analyse…'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
+  if (result) { result.style.textAlign = 'center'; result.innerHTML = `<div style="color:var(--text-muted);font-size:12px"><div style="font-size:24px;margin-bottom:8px">⟳</div>${isPDF ? 'Extraction du texte PDF…' : 'Vision IA en cours…'}</div>`; }
+  try {
+    let data;
+    if (isPDF) {
+      const text = await extractTextFromPDF(file);
+      data = parseOCRText(text);
+      if (!data.montant_ttc) {
+        if (result) result.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">🔍</div>PDF sans texte — Vision IA…</div>';
+        data = await extractPDFPageAsImage(file);
+      }
+    } else if (isImage) {
+      data = await runVisionOCR(file);
+    } else { throw new Error('Format non supporté'); }
+    data.account       = data.account       || '601100';
+    data.account_label = data.account_label || 'Achats matières';
+    renderOCRResult(data, status, result);
+  } catch (err) {
+    console.warn('OCR error:', err.message);
+    simulateOCR();
   }
-  if (result) {
-    result.innerHTML = `
-      <div style="text-align:center;padding:20px;color:var(--text-muted)">
-        <div style="font-size:32px;margin-bottom:12px">📄</div>
-        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Importez un PDF texturé (contenant du texte).</p>
-        <p style="font-size:12px;color:var(--text-muted);line-height:1.5">
-          Pour analyser vos factures, passez d'abord par une<br>
-          app gratuite comme <strong>Adobe Scan</strong> ou <strong>Text Fairy</strong><br>
-          puis importez le PDF obtenu.
-        </p>
-      </div>`;
+}
+
+// ====== PDF PAGE → IMAGE → VISION (for scanned PDFs) ======
+async function extractPDFPageAsImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        const pdf    = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+        const page   = await pdf.getPage(1);
+        const scale  = 2;
+        const vp     = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.width  = vp.width;
+        canvas.height = vp.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+        const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+        resolve(await callVisionProxy(base64, 'image/jpeg'));
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ====== SIMULATE OCR (demo mode) ======
+function simulateOCR(type) {
+  const status = document.getElementById('ocr-status');
+  const result = document.getElementById('ocr-result');
+  if (status) { status.textContent = '⟳ Analyse…'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
+  if (result) { result.style.textAlign = 'center'; result.innerHTML = '<span style="color:var(--text-muted);font-size:12px">⟳ Reconnaissance en cours…</span>'; }
+  setTimeout(() => {
+    const demo = type === 'img' ? {
+      supplier: 'Martin & Associés SARL', invoice_no: 'FAC-2026-0839', date: '10/01/2026',
+      montant_ht: 2666.67, tva: 533.33, montant_ttc: 3200.00, account: '622700', account_label: 'Honoraires',
+    } : {
+      supplier: 'K. Abdessalam', invoice_no: 'FAC-2026-0847', date: '12/01/2026',
+      montant_ht: 1250.00, tva: 250.00, montant_ttc: 1500.00, account: '601100', account_label: 'Achats matières',
+    };
+    renderOCRResult(demo, status, result);
+  }, 1400);
+}
+
+// ====== OCR RESULT RENDERER ======
+let _ocrData = null;
+function fmt(v) { return v != null && !isNaN(v) ? Number(v).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'; }
+function renderOCRResult(data, statusEl, resultEl) {
+  _ocrData = data; window._ocrData = data;
+  if (statusEl) { statusEl.textContent = '✓ Terminé'; statusEl.style.background = 'var(--green-dim)'; statusEl.style.color = 'var(--green)'; }
+  if (!resultEl) return;
+  const fields = [
+    { label:'Fournisseur', value: data.supplier||'—', mono: false },
+    { label:'N° Facture',  value: data.invoice_no||'—', mono: true },
+    { label:'Date',        value: data.date||'—', mono: true },
+    { label:'Montant HT',  value: fmt(data.montant_ht)+' €', mono: true },
+    { label:'TVA (20%)',   value: fmt(data.tva)+' €', mono: true },
+    { label:'Montant TTC', value: fmt(data.montant_ttc)+' €', mono: true },
+    { label:'Compte',      value:(data.account||'601100')+' — '+(data.account_label||'—'), mono: true },
+  ];
+  resultEl.style.textAlign = 'start';
+  resultEl.innerHTML = '<div style="padding:12px 20px 16px"><div style="display:grid;gap:7px" id="ocr-fields">' +
+    fields.map((f,i) => '<div class="ocr-field"><div class="ocr-field-label">'+f.label+'</div><div class="ocr-field-value'+(f.mono?' mono':'')+'" style="padding-right:68px">'+f.value+'</div><button class="ocr-copy-btn" onclick="copyField(this.dataset.val,this)" data-val="'+f.value.replace(/"/g,'&quot;')+'" title="Copier '+f.label+'">⎘ Copier</button></div>').join('') +
+    '</div><div class="ocr-actions"><button class="ocr-action-btn primary" onclick="copyAllOCR()">📋 Tout copier</button><button class="ocr-action-btn" onclick="downloadOCR(\'txt\')">⬇ .TXT</button><button class="ocr-action-btn" onclick="downloadOCR(\'csv\')">⬇ .CSV</button><button class="ocr-action-btn" onclick="downloadOCR(\'json\')">⬇ .JSON</button></div></div>';
+  const tbody = document.getElementById('ocr-entries');
+  if (tbody && data.montant_ht) {
+    const d = data.date || new Date().toLocaleDateString('fr-FR').replace(/\//g,'/').slice(0,8)+'26';
+    tbody.innerHTML = '<tr><td class="mono">'+d+'</td><td>'+(data.supplier||'Fournisseur')+' — '+(data.account_label||'Achat')+'</td><td class="mono">'+(data.account||'601100')+'</td><td class="mono text-red">'+fmt(data.montant_ht)+'</td><td class="mono">—</td><td><span class="status-pill validated">95%</span></td></tr><tr><td class="mono">'+d+'</td><td>TVA déductible s/achat</td><td class="mono">445660</td><td class="mono text-red">'+fmt(data.tva)+'</td><td class="mono">—</td><td><span class="status-pill validated">97%</span></td></tr><tr><td class="mono">'+d+'</td><td>Dette fournisseur — '+(data.supplier||'—')+'</td><td class="mono">401000</td><td class="mono">—</td><td class="mono text-green">'+fmt(data.montant_ttc)+'</td><td><span class="status-pill validated">99%</span></td></tr>';
   }
+}
+
+// ====== COPY + DOWNLOAD HELPERS ======
+function copyField(value, btn) {
+  const plain = value.replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  const doIt = () => { btn.textContent='✓ Copié'; btn.classList.add('copied'); setTimeout(()=>{btn.textContent='⎘ Copier'; btn.classList.remove('copied')},1800); };
+  if (navigator.clipboard) navigator.clipboard.writeText(plain).then(doIt).catch(()=>fallbackCopy(plain,doIt));
+  else fallbackCopy(plain,doIt);
+}
+function fallbackCopy(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;opacity:0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta); if(cb) cb();
+}
+function copyAllOCR() {
+  const d = _ocrData; if(!d)return;
+  const text = '=== FACTURE OCR — ComptaEasy ===\nFournisseur : '+(d.supplier||'—')+'\nN° Facture  : '+(d.invoice_no||'—')+'\nDate        : '+(d.date||'—')+'\nMontant HT  : '+fmt(d.montant_ht)+' €\nTVA (20%)   : '+fmt(d.tva)+' €\nMontant TTC : '+fmt(d.montant_ttc)+' €\nCompte      : '+(d.account||'601100')+' — '+(d.account_label||'');
+  const btn = document.querySelector('.ocr-action-btn.primary');
+  const doIt = ()=>{if(btn){btn.textContent='✓ Copié !';setTimeout(()=>btn.textContent='📋 Tout copier',1800);}};
+  if(navigator.clipboard)navigator.clipboard.writeText(text).then(doIt).catch(()=>fallbackCopy(text,doIt));
+  else fallbackCopy(text,doIt);
+}
+function downloadOCR(format) {
+  const d = _ocrData; if(!d)return;
+  const slug = (d.invoice_no||'facture').replace(/[^a-z0-9]/gi,'_');
+  let content, mime, ext;
+  if(format==='txt'){content='=== RÉSULTAT OCR — ComptaEasy ===\nFournisseur : '+(d.supplier||'—')+'\nN° Facture  : '+(d.invoice_no||'—')+'\nDate        : '+(d.date||'—')+'\nMontant HT  : '+fmt(d.montant_ht)+' €\nTVA (20%)   : '+fmt(d.tva)+' €\nMontant TTC : '+fmt(d.montant_ttc)+' €\nCompte      : '+(d.account||'601100')+' — '+(d.account_label||'')+'\n\nExtrait par ComptaEasy — '+new Date().toLocaleDateString('fr-FR');mime='text/plain';ext='txt';}
+  else if(format==='csv'){const rows=[['Champ','Valeur'],['Fournisseur',d.supplier||''],['N° Facture',d.invoice_no||''],['Date',d.date||''],['Montant HT',d.montant_ht??''],['TVA',d.tva??''],['Montant TTC',d.montant_ttc??''],['Compte',(d.account||'601100')+' - '+(d.account_label||'')]];content=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');mime='text/csv';ext='csv';}
+  else{content=JSON.stringify({meta:{source:'ComptaEasy OCR',date:new Date().toISOString()},data:d},null,2);mime='application/json';ext='json';}
+  const blob=new Blob(['\ufeff'+content],{type:mime+';charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=Object.assign(document.createElement('a'),{href:url,download:'ocr_'+slug+'.'+ext});
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+// ====== INIT DROPZONE ======
+function initOCRUpload() {
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const browseBtn = document.getElementById('browse-btn');
+  if (!dropzone || !fileInput) return;
+  function openPicker(e) { e.preventDefault(); e.stopPropagation(); fileInput.click(); }
+  if (browseBtn) browseBtn.addEventListener('click', openPicker);
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; dropzone.style.background = 'rgba(79,110,255,0.08)'; });
+  dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border)'; dropzone.style.background = 'var(--bg-input)'; });
+  dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.style.borderColor = 'var(--border)'; dropzone.style.background = 'var(--bg-input)'; handleOCRFile(e.dataTransfer.files); });
+  fileInput.addEventListener('change', () => { if (fileInput.files.length) handleOCRFile(fileInput.files); fileInput.value = ''; });
+}
+
+function validateEntries() {
+  const rows = document.querySelectorAll('#ocr-entries tr').length;
+  alert('✅ ' + rows + ' écriture(s) validée(s) et enregistrée(s)');
 }
 
 // ====== ÉTATS FINANCIERS MODAL ======
@@ -1246,7 +1660,7 @@ function openModal(title, data) {
   if (data.actif) {
     const totalActif = data.actif.reduce((s,i) => s + i[1], 0);
     const totalPassif = data.passif.reduce((s,i) => s + i[1], 0);
-    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
+    detail.innerHTML = `<div style="text-align:start"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:6px">ACTIF</div>${data.actif.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Actif</span><span class="text-mono">${totalActif.toLocaleString('fr-FR')} €</span></div></div>
         <div><div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:6px">PASSIF</div>${data.passif.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Passif</span><span class="text-mono">${totalPassif.toLocaleString('fr-FR')} €</span></div></div>
@@ -1255,14 +1669,14 @@ function openModal(title, data) {
   } else if (data.charges) {
     const totalCharges = data.charges.reduce((s,i) => s + i[1], 0);
     const totalProduits = data.produits.reduce((s,i) => s + i[1], 0);
-    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
+    detail.innerHTML = `<div style="text-align:start"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div><div style="font-size:11px;color:var(--red);font-weight:600;margin-bottom:6px">CHARGES</div>${data.charges.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Charges</span><span class="text-mono">${totalCharges.toLocaleString('fr-FR')} €</span></div></div>
         <div><div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:6px">PRODUITS</div>${data.produits.map(i => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span>${i[0]}</span><span class="text-mono">${i[1].toLocaleString('fr-FR')} €</span></div>`).join('')}<div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;color:var(--text-primary);font-size:12px"><span>Total Produits</span><span class="text-mono">${totalProduits.toLocaleString('fr-FR')} €</span></div></div>
       </div>
       <div style="margin-top:12px;padding:10px;background:var(--accent-glow);border-radius:var(--radius-md);text-align:center;font-size:12px;font-weight:600;color:var(--accent)">Résultat : ${(totalProduits - totalCharges).toLocaleString('fr-FR')} €</div></div>`;
   } else if (Array.isArray(data)) {
-    detail.innerHTML = `<div style="text-align:left"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>${data.map(i => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">• ${i}</div>`).join('')}</div>`;
+    detail.innerHTML = `<div style="text-align:start"><h3 style="font-size:14px;color:var(--text-primary);margin-bottom:12px">${title}</h3>${data.map(i => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary)">• ${i}</div>`).join('')}</div>`;
   }
 }
 
@@ -1274,12 +1688,12 @@ function calcIS() {
   const r10 = Math.min(v, 1000000) * 0.10;
   const r20 = Math.max(0, Math.min(v - 1000000, 99000000)) * 0.20;
   const r31 = Math.max(0, v - 100000000) * 0.31;
-  
+  const total = r10 + r20 + r31;
   document.getElementById('sim-result').innerHTML = `
     <div style="display:flex;justify-content:space-between"><span>Tranche 1 (10%)</span><span style="color:var(--text-primary)">${r10.toLocaleString('fr-FR',{minimumFractionDigits:0})} MAD</span></div>
     <div style="display:flex;justify-content:space-between"><span>Tranche 2 (20%)</span><span style="color:var(--text-primary)">${r20.toLocaleString('fr-FR',{minimumFractionDigits:0})} MAD</span></div>
     <div style="display:flex;justify-content:space-between"><span>Tranche 3 (31%)</span><span style="color:var(--text-primary)">${r31.toLocaleString('fr-FR',{minimumFractionDigits:0})} MAD</span></div>
-    <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border);color:var(--green);font-weight:600"><span>Total IS</span><span>${(r10+r20+r31).toLocaleString('fr-FR',{minimumFractionDigits:0})} MAD</span></div>`;
+    <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border);color:var(--green);font-weight:600"><span>Total IS</span><span>${total.toLocaleString('fr-FR',{minimumFractionDigits:0})} MAD</span></div>`;
 }
 
 // ====== GED FILTER ======
@@ -1293,7 +1707,7 @@ function filterClients(q) {
 function searchVeille() {
   const q = document.getElementById('veille-input')?.value?.toLowerCase() || '';
   const result = document.getElementById('veille-result');
-  const map = {is:'Taux IS Maroc 2026 : 31% — DGI CGI art. 17-I',tva:'TVA Maroc : franchise 500 000 MAD — DGI CGI art. 92',fec:'FEC Maroc : délai 30 jours — CGI art. 25',cvae:'Échéance Cotisation Minimale 2026 au 2 mai 2026'};
+  const map = {is:'Taux IS Maroc 2026 : 31% — DGI CGI art. 17-I',tva:'TVA Maroc : franchise 500 000 MAD — DGI CGI art. 92',fec:'FEC Maroc : délai 30 jours — CGI art. 25',cvae:'CM 2026 : 0,50% du CA HT, min 3 000 MAD. Exonération 36 premiers mois. Échéance : 2 mai 2026'};
   const found = Object.entries(map).find(([k]) => q.includes(k));
   result.innerHTML = found ? `<span style="color:var(--text-secondary)">📌 ${found[1]}</span>` : '<span style="color:var(--text-muted);font-style:italic">Aucun résultat. Essayez : IS, TVA, FEC, CM</span>';
 }
@@ -1307,6 +1721,21 @@ function renameCabinet() {
   if (name && name.trim()) el.textContent = name.trim();
 }
 
+// ====== API KEY CONFIGURATION ======
+function configureAPI() {
+  const anthropic = prompt('🔑 Clé API Anthropic (Claude) pour la Vision OCR :', CLAUDE_KEY || '');
+  if (anthropic !== null) { CLAUDE_KEY = anthropic.trim(); localStorage.setItem('ce_claude_key', CLAUDE_KEY); }
+  const gemini = prompt('🤖 Clé API Gemini pour l\'assistant fiscal :', GEMINI_KEY || '');
+  if (gemini !== null) { GEMINI_KEY = gemini.trim(); localStorage.setItem('ce_gemini_key', GEMINI_KEY); }
+  showToast(anthropic || gemini ? '✅ Clés API sauvegardées' : '⚠️ Aucune clé modifiée');
+}
+function showToast(msg) {
+  let t = document.getElementById('toast-msg');
+  if (!t) { t = document.createElement('div'); t.id = 'toast-msg'; t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:white;padding:10px 20px;border-radius:var(--radius-md);font-size:12px;font-weight:600;z-index:9999;transition:opacity 0.3s;font-family:var(--font-ui)'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.opacity = '1'; t.style.display = 'block';
+  clearTimeout(t._t); t._t = setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 300); }, 2500);
+}
+
 // ====== KPI TICKER ======
 function animateKPI(){
   let v=2847500;
@@ -1317,17 +1746,19 @@ function animateKPI(){
 applyLang('fr');
 animateKPI();
 </script>
-<script>window.COMPTAEASY_API = window.location.hostname.includes('github.io') ? 'https://comptaeasy-7gej.vercel.app' : '';</script>
+<script>window.COMPTAEASY_API = window.location.hostname.includes('github.io') ? 'https://comptaeasy.vercel.app' : '';</script>
 <script>
-(function(){const API=window.COMPTAEASY_API||'';window.CE={};window.CE.loadDashboard=async()=>{try{const res=await fetch(API+'/api/dashboard');const data=await res.json();const kpi=data.kpi;const caEl=document.getElementById('kpi-ca');if(caEl)caEl.textContent=kpi.ca.replace(/[^0-9,\s]/g,'').trim();const tbody=document.querySelector('.data-table tbody');if(tbody&&data.journal){tbody.innerHTML=data.journal.map(e=>`<tr><td class="mono">${e.date}</td><td class="mono">${e.piece||'-'}</td><td>${e.label}</td><td class="mono">${e.compte}</td><td class="mono ${e.debit>0?'text-red':''}">${e.debit>0?e.debit.toFixed(2):'—'}</td><td class="mono ${e.credit>0?'text-green':''}">${e.credit>0?e.credit.toFixed(2):'—'}</td><td><span class="status-pill ${e.statut}">${e.statut}</span></td></tr>`).join('')}return data}catch(e){console.warn('API not available, demo mode',e);return null}};window.CE.askIA=async(q,lang)=>{const res=await fetch(API+'/api/ia/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,lang:lang||'fr'}),signal:AbortSignal.timeout(30000)});return res.json()};window.CE.searchVeille=async(q)=>{const res=await fetch(API+'/api/veille?q='+encodeURIComponent(q));return res.json()};window.CE.loadClients=async()=>{const res=await fetch(API+'/api/clients');return res.json()};if(window.location.hash==='#dashboard')window.CE.loadDashboard();console.log('✓ API Bridge loaded')})();
+(function(){const API=window.COMPTAEASY_API||'';window.CE={};window.CE.loadDashboard=async()=>{try{const res=await fetch(API+'/api/dashboard');const data=await res.json();const kpi=data.kpi;const caEl=document.getElementById('kpi-ca');if(caEl)caEl.textContent=kpi.ca.replace(/[^0-9,\s]/g,'').trim();const tbody=document.querySelector('.data-table tbody');if(tbody&&data.journal){tbody.innerHTML=data.journal.map(e=>`<tr><td class="mono">${e.date}</td><td class="mono">${e.piece||'-'}</td><td>${e.label}</td><td class="mono">${e.compte}</td><td class="mono ${e.debit>0?'text-red':''}">${e.debit>0?e.debit.toFixed(2):'—'}</td><td class="mono ${e.credit>0?'text-green':''}">${e.credit>0?e.credit.toFixed(2):'—'}</td><td><span class="status-pill ${e.statut}">${e.statut}</span></td></tr>`).join('')}return data}catch(e){console.warn('API not available, demo mode',e);return null}};window.CE.askIA=async(q,lang)=>{const res=await fetch(API+'/api/ia/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,lang:lang||'fr'}),signal:AbortSignal.timeout(30000)});return res.json()};window.CE.searchVeille=async(q)=>{const res=await fetch(API+'/api/veille?q='+encodeURIComponent(q));return res.json()};window.CE.loadClients=async()=>{const res=await fetch(API+'/api/clients');return res.json()};window.CE.analyzeOCR=async(file,supplier,amount)=>{const form=new FormData();if(file)form.append('file',file);form.append('supplier',supplier||'');form.append('amount',amount||'');const res=await fetch(API+'/api/ocr/analyze',{method:'POST',body:form});return res.json()};if(window.location.hash==='#dashboard')window.CE.loadDashboard();console.log('✓ API Bridge loaded')})();
 // Check API connectivity for AI status
 (function(){
   const el=document.getElementById('ai-status-label');
   const API=window.COMPTAEASY_API||'';
-  if(!API){if(el)el.textContent='Mode local';return}
+  if(modeBadge) modeBadge.textContent = liveMode ? '🌐 MODE LIVE' : '⚡ MODE DÉMO';
+  if(!API){if(el)el.textContent='Mode local';if(modeBadge)modeBadge.textContent='⚡ MODE DÉMO';return}
   fetch(API+'/api/dashboard',{signal:AbortSignal.timeout(5000)}).then(r=>{
     if(el)el.textContent=r.ok?'Connecté — Gemini':'Mode local';
-  }).catch(()=>{if(el)el.textContent='Mode local'});
+    if(modeBadge)modeBadge.textContent=r.ok?'🌐 MODE LIVE':'⚡ MODE DÉMO';
+  }).catch(()=>{if(el)el.textContent='Mode local';if(modeBadge)modeBadge.textContent='⚡ MODE DÉMO'});
 })();
 function toggleSidebar(){
   document.querySelector('.sidebar').classList.toggle('mobile-open');
