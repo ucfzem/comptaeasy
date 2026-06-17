@@ -1602,12 +1602,17 @@ async function handleOCRFile(files) {
 // ====== VISION OCR VIA BACKEND PROXY ======
 async function callVisionProxy(base64, mediaType) {
   const apiBase = window.COMPTAEASY_API || '';
+  const userKey = localStorage.getItem('ce_gemini_key') || '';
   const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 15000);
+  const tid = setTimeout(() => ctrl.abort(), 20000);
   const resp = await fetch(apiBase + '/api/ocr/vision', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: base64, media_type: mediaType || 'image/jpeg' }),
+    body: JSON.stringify({
+      image: base64,
+      media_type: mediaType || 'image/jpeg',
+      user_key: userKey
+    }),
     signal: ctrl.signal
   });
   clearTimeout(tid);
