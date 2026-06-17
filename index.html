@@ -1730,8 +1730,16 @@ async function runOCR() {
         const text = await extractTextFromPDF(file);
         data = parseOCRText(text);
         if (!data.montant_ttc) {
-          if (result) result.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">🔍</div>PDF sans texte — Vision IA…</div>';
-          data = await extractPDFPageAsImage(file);
+          // Texte extrait mais non parsé → affichage brut
+          if (result) {
+            result.style.textAlign = 'left';
+            result.innerHTML = '<div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">⚠ Texte extrait mais non reconnu automatiquement. Copiez les données manuellement :</div>'
+              + '<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;font-family:var(--font-data);font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;color:var(--text-secondary)">'
+              + text.slice(0, 5000).replace(/</g,'&lt;') + '</div>'
+              + '<button onclick="var t=this.parentElement.querySelector(\'div\').textContent;navigator.clipboard.writeText(t).then(()=>showToast(\'✅ Texte copié\'))" style="margin-top:10px;padding:6px 14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:11px">📋 Copier le texte brut</button>';
+          }
+          if (status) { status.textContent = '⚠ Texte non parsé'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
+          return;
         }
       } catch (err) {
         if (err.message === 'PDF_SCANNED') {
