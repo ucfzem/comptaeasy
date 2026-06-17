@@ -721,7 +721,8 @@ body {
 }
 .ocr-action-btn.primary:hover { background: var(--accent-dim); }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script>(function(){var t='cfut'+'_IuU3BjWacQMd1HsdpqlLUUV6QIidz20ZNBSX6oGtb0de52ae';var s=document.createElement('script');s.src='https://static.cloudflareinsights.com/beacon.min.js';s.defer=!0;s.setAttribute('data-cf-beacon',JSON.stringify({token:t}));document.head.appendChild(s)})();</script>
 </head>
 <body>
@@ -1387,21 +1388,49 @@ function handleOCRFile(files) {
       }).catch(() => simulateOCR());
     } else { simulateOCR(); }
   }
-  if (isImage && typeof Tesseract !== 'undefined') {
-    Tesseract.recognize(previewUrl, 'fra+eng', { logger: m => {} }).then(({ data: { text } }) => {
-      const parsed = parseOCRText(text);
-      if (parsed.montant_ttc) done(parsed);
-      else fallback();
-    }).catch(() => fallback());
-  } else if (isPDF) {
+  function extractTextFromPDF(pdfFile) {
     const reader = new FileReader();
     reader.onload = function(e) {
-      const text = e.target.result || '';
-      const parsed = parseOCRText(text);
-      if (parsed.montant_ttc) done(parsed);
-      else fallback();
+      const arrayBuffer = e.target.result;
+      pdfjsLib.getDocument({ data: arrayBuffer }).promise.then(pdf => {
+        let fullText = '';
+        const pages = [];
+        for (let i = 1; i <= pdf.numPages; i++) pages.push(i);
+        Promise.all(pages.map(i =>
+          pdf.getPage(i).then(p => p.getTextContent().then(tc => {
+            fullText += tc.items.map(it => it.str).join(' ') + '\n';
+          }))
+        )).then(() => {
+          const parsed = parseOCRText(fullText);
+          if (parsed.montant_ttc) done(parsed);
+          else fallback();
+        }).catch(() => fallback());
+      }).catch(() => fallback());
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(pdfFile);
+  }
+  if (isImage) {
+    result.innerHTML = `
+      <div style="text-align:center;padding:20px;color:var(--text-muted)">
+        <div style="font-size:32px;margin-bottom:12px">📸</div>
+        <p style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">Les images ne sont pas traitées directement.</p>
+        <p style="font-size:12px;color:var(--text-muted);line-height:1.5">
+          Utilisez une application gratuite comme <strong>Adobe Scan</strong> ou <strong>Text Fairy</strong><br>
+          pour convertir l'image en PDF texturé (PDF+OCR),<br>
+          puis importez le PDF ici.
+        </p>
+        <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <span style="background:var(--accent-glow);color:var(--accent);padding:6px 14px;border-radius:20px;font-size:11px">📱 Adobe Scan</span>
+          <span style="background:var(--green-dim);color:var(--green);padding:6px 14px;border-radius:20px;font-size:11px">📱 Text Fairy</span>
+          <span style="background:var(--amber-dim);color:var(--amber);padding:6px 14px;border-radius:20px;font-size:11px">📱 Microsoft Lens</span>
+        </div>
+      </div>`;
+    status.textContent = 'Image uniquement';
+    status.style.background = 'var(--amber-dim)';
+    status.style.color = 'var(--amber)';
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  } else if (isPDF) {
+    extractTextFromPDF(file);
   } else { fallback(); }
 }
 
