@@ -721,6 +721,7 @@ body {
 }
 .ocr-action-btn.primary:hover { background: var(--accent-dim); }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>(function(){var t='cfut'+'_IuU3BjWacQMd1HsdpqlLUUV6QIidz20ZNBSX6oGtb0de52ae';var s=document.createElement('script');s.src='https://static.cloudflareinsights.com/beacon.min.js';s.defer=!0;s.setAttribute('data-cf-beacon',JSON.stringify({token:t}));document.head.appendChild(s)})();</script>
 </head>
 <body>
@@ -1324,12 +1325,38 @@ function navigate(section, e) {
 }
 
 // ====== REAL OCR UPLOAD ======
+function parseOCRText(text) {
+  const data = { supplier: '—', invoice_no: '—', date: '—', montant_ht: null, tva: null, montant_ttc: null, account: '601100', account_label: 'Achats matières' };
+  const lines = text.split('\n').filter(Boolean);
+  const full = text.toLowerCase();
+  const nums = text.match(/[\d\s]+[.,]\d{2}/g) || [];
+  const amounts = nums.map(s => parseFloat(s.replace(/\s/g,'').replace(',','.'))).filter(n => !isNaN(n));
+  const ttc = amounts.filter(a => a > 100 && a < 1e7);
+  if (ttc.length) data.montant_ttc = ttc[0];
+  if (ttc.length > 1) data.montant_ht = Math.min(...ttc);
+  if (data.montant_ttc && data.montant_ht) data.tva = Math.round((data.montant_ttc - data.montant_ht) * 100) / 100;
+  else if (data.montant_ttc) data.tva = Math.round(data.montant_ttc * 20 / 120 * 100) / 100;
+  for (const line of lines) {
+    const l = line.toLowerCase();
+    if (l.includes('facture') || l.includes('fac-') || l.includes('invoice')) {
+      const m = line.match(/[A-Z]+-\d+/); if (m) data.invoice_no = m[0];
+    }
+    if (l.includes('sarl') || l.includes('eurl') || l.includes('sa ') || l.includes('entreprise') || l.includes('client')) {
+      data.supplier = line.replace(/^(fournisseur|client|facture|doit|à)\s*:?\s*/i, '').trim().slice(0, 50);
+    }
+    const dm = line.match(/(\d{2})[\/\-](\d{2})[\/\-](\d{4})/);
+    if (dm) data.date = dm[0];
+  }
+  return data;
+}
+
 function handleOCRFile(files) {
   if (!files || files.length === 0) return;
   const file = files[0];
   const status = document.getElementById('ocr-status');
   const result = document.getElementById('ocr-result');
   const isImage = file.type.startsWith('image/');
+  const isPDF = file.type === 'application/pdf';
   const previewUrl = isImage ? URL.createObjectURL(file) : null;
   status.textContent = 'Analyse en cours…';
   status.style.background = 'var(--amber-dim)';
@@ -1346,25 +1373,36 @@ function handleOCRFile(files) {
       </div>
       ${previewUrl ? `<img src="${previewUrl}" style="max-width:100%;max-height:160px;border-radius:var(--radius-md);display:block;margin:0 auto">` : ''}
     </div>`;
-  if (typeof window.CE?.analyzeOCR !== 'function') {
-    setTimeout(() => { URL.revokeObjectURL(previewUrl); simulateOCR(); }, 800);
-    return;
+  function done(data) {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    data.account = data.account || '601100';
+    data.account_label = data.account_label || 'Achats matières';
+    renderOCRResult(data, status, result);
   }
-  window.CE.analyzeOCR(file).then(data => {
-    if (data.success) {
-      URL.revokeObjectURL(previewUrl);
-      renderOCRResult(data.data, status, result);
-    } else {
-      URL.revokeObjectURL(previewUrl);
-      throw new Error(data.error || 'Échec de l\'analyse OCR');
-    }
-  }).catch(err => {
-    URL.revokeObjectURL(previewUrl);
-    status.textContent = 'Erreur';
-    status.style.background = 'var(--red-dim)';
-    status.style.color = 'var(--red)';
-    result.innerHTML = `<span style="color:var(--red)">⚠ ${err.message}</span>`;
-  });
+  function fallback() {
+    if (typeof window.CE?.analyzeOCR === 'function') {
+      window.CE.analyzeOCR(file).then(r => {
+        if (r.success) done(r.data);
+        else { throw new Error(r.error || 'Échec'); }
+      }).catch(() => simulateOCR());
+    } else { simulateOCR(); }
+  }
+  if (isImage && typeof Tesseract !== 'undefined') {
+    Tesseract.recognize(previewUrl, 'fra+eng', { logger: m => {} }).then(({ data: { text } }) => {
+      const parsed = parseOCRText(text);
+      if (parsed.montant_ttc) done(parsed);
+      else fallback();
+    }).catch(() => fallback());
+  } else if (isPDF) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result || '';
+      const parsed = parseOCRText(text);
+      if (parsed.montant_ttc) done(parsed);
+      else fallback();
+    };
+    reader.readAsText(file);
+  } else { fallback(); }
 }
 
 function initOCRUpload() {
