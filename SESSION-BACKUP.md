@@ -346,4 +346,42 @@ bda2f53 fix: resolve all mobile upload bugs
 d61e408 fix: mobile upload using label for file input
 ```
 
-*Fin du document — Session complète du 17 Juin 2026*
+---
+
+## 9. Session 2 — OCR : Migration Tesseract.js + Résolution Erreur "Invalid array length" (17 Juin 2026)
+
+### Problème
+L'OCR utilisait Claude Vision API (payant, nécessite clé API). L'utilisateur voulait une solution **gratuite** fonctionnant sans clé API, directement dans le navigateur.
+
+### Solution
+Migration vers **Tesseract.js v5** comme moteur OCR principal, gratuit et 100% côté client. Claude Vision conservé comme option d'amélioration (bouton `confirm()`).
+
+### Changements clés
+1. **Tesseract.js** (CDN) ajouté comme moteur OCR par défaut — `Tesseract.createWorker('fra')` avec langue française
+2. **PDF.js v3** (chargé via `<script>` simple) utilisé pour :
+   - Extraction de texte des PDFs recherchables
+   - Rendu première page → canvas → OCR Tesseract pour PDFs scannés
+3. **Nouvelle fonction `getPDFDoc(file)`** qui tente d'abord le Blob URL, puis `arrayBuffer` en fallback (contourne l'erreur "Invalid array length" sur certains PDFs)
+4. **Bannette rouge `banner()`** ajoutée pour tracer l'exécution même si le panneau debug ne s'affiche pas
+5. **`loadPDFJS()` supprimé** — plus de module loader dynamique v4 (causait des soucis mobiles)
+
+### État actuel
+- ✅ OCR sans clé API via Tesseract.js
+- ✅ Text extraction PDF.js
+- ✅ Fallback Vision IA Claude (optionnel)
+- ❌ **Bloqué** — `pdfjsLib.getDocument()` lance "Invalid array length" sur le PDF spécifique de l'utilisateur
+- ❌ Les logs `_ocrLog()` des blocs `catch` internes n'apparaissent pas dans le panneau debug (inexpliqué)
+- ⏳ `runOCR()` dans `public/index.html` doit encore être mis à jour avec la même logique que `index.html`
+
+### Pending
+- Synchroniser `public/index.html` (runOCR manque la refonte avec banner)
+- Pousser sur GitHub Pages et tester
+- Si le PDF reste bloqué par PDF.js → envoyer les bytes bruts à Claude Vision API (l'utilisateur a une clé API) ou conseiller conversion en image
+
+### Fichiers modifiés
+- `index.html` — refonte complète de `runOCR()`, ajout de `getPDFDoc()`, `banner()`, Tesseract
+- `public/index.html` — partiellement synchronisé
+
+---
+
+*Session 2 — 17 Juin 2026*
