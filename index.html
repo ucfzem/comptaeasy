@@ -1017,12 +1017,14 @@ const SECTION_HTML = {
   <div class="card">
     <div class="card-header"><div class="card-title">📄 Import de Factures</div><div class="card-badge">OCR Actif</div></div>
     <div style="padding:30px 20px;text-align:center">
-      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none">
       <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:50px 20px;background:var(--bg-input);cursor:pointer;transition:var(--transition)" id="dropzone">
         <svg width="36" height="36" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.2"><path d="M8 1v10M3 6l5 5 5-5"/><path d="M2 12v2h12v-2"/></svg>
         <p style="margin-top:14px;color:var(--text-secondary);font-size:13px">Déposez vos fichiers ici (PDF, JPG, PNG)</p>
         <p style="color:var(--text-muted);font-size:11px;margin-top:4px">ou</p>
-        <label for="file-input" style="display:inline-block;padding:10px 24px;background:var(--accent);color:white;border-radius:var(--radius-md);cursor:pointer;font-weight:600;font-size:13px;border:none;margin-top:4px">Parcourir</label>
+        <label style="display:inline-block;padding:10px 24px;background:var(--accent);color:white;border-radius:var(--radius-md);cursor:pointer;font-weight:600;font-size:13px;border:none;margin-top:4px;position:relative">
+          Parcourir
+          <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer">
+        </label>
       </div>
     <div style="padding:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
       <span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary)">📎 FAC-2026-0847.pdf</span>
