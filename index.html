@@ -1106,6 +1106,7 @@ const SAISIE_HTML = `
           <div id="drop-hint" style="margin-top:12px;font-size:10px;color:var(--text-muted);line-height:1.5">PDF → texte extrait par PDF.js<br>Image → lu par Vision IA (Claude)</div>
         </div>
         <div id="file-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;min-height:0"></div>
+        <button id="clear-files-btn" onclick="clearOCRSelection()" style="display:none;margin-top:6px;padding:4px 12px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-md);cursor:pointer;font-size:11px;color:var(--text-muted);font-family:var(--font-ui)">✕ Tout effacer</button>
         <button id="analyze-btn" onclick="runOCR()" style="display:none;width:100%;margin-top:12px;padding:10px;background:linear-gradient(135deg,var(--accent),var(--purple));color:white;border:none;border-radius:var(--radius-md);cursor:pointer;font-weight:700;font-size:13px;font-family:var(--font-ui);letter-spacing:0.3px">⚡ Analyser la facture</button>
         <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
           <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.8px">Fichiers démo</div>
@@ -1414,6 +1415,19 @@ function parseOCRText(text) {
   return data;
 }
 
+function clearOCRSelection() {
+  window._ocrFiles = null;
+  document.getElementById('file-chips').innerHTML = '';
+  document.getElementById('analyze-btn').style.display = 'none';
+  document.getElementById('clear-files-btn').style.display = 'none';
+  const preview = document.getElementById('ocr-preview');
+  if (preview) preview.style.display = 'none';
+  const result = document.getElementById('ocr-result');
+  if (result) { result.style.textAlign = 'center'; result.innerHTML = '<div><svg width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" style="margin:0 auto 12px;opacity:0.3;display:block"><circle cx="6" cy="6" r="4"/><path d="M10 10l4 4"/></svg>Importez un fichier pour lancer l\'analyse</div>'; }
+  const status = document.getElementById('ocr-status');
+  if (status) { status.textContent = 'En attente'; status.style.background = ''; status.style.color = ''; }
+}
+
 // ====== HANDLE FILE SELECTION (preview + store) ======
 function handleOCRFile(files) {
   if (!files || files.length === 0) return;
@@ -1423,6 +1437,8 @@ function handleOCRFile(files) {
   const isPDF   = file.type === 'application/pdf';
   const chips = document.getElementById('file-chips');
   if (chips) chips.innerHTML = Array.from(files).map(f => `<span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary);margin:0">${isPDF?'📄':'🖼'} ${f.name}</span>`).join('');
+  const clearBtn = document.getElementById('clear-files-btn');
+  if (clearBtn) clearBtn.style.display = 'block';
   const btn = document.getElementById('analyze-btn');
   if (btn) btn.style.display = 'block';
   const previewBox = document.getElementById('ocr-preview');
@@ -1502,8 +1518,9 @@ async function runOCR() {
   const result = document.getElementById('ocr-result');
   if (!files || files.length === 0) { simulateOCR(); return; }
   const file    = files[0];
-  const isImage = file.type.startsWith('image/');
-  const isPDF   = file.type === 'application/pdf';
+  const ext = file.name.split('.').pop().toLowerCase();
+  const isImage = file.type.startsWith('image/') || /^(jpg|jpeg|png|webp|bmp|tiff)$/.test(ext);
+  const isPDF   = file.type === 'application/pdf' || ext === 'pdf';
   if (status) { status.textContent = '⟳ Analyse…'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
   if (result) { result.style.textAlign = 'center'; result.innerHTML = `<div style="color:var(--text-muted);font-size:12px"><div style="font-size:24px;margin-bottom:8px">⟳</div>${isPDF ? 'Extraction du texte PDF…' : 'Vision IA en cours…'}</div>`; }
   try {
