@@ -1423,8 +1423,6 @@ function base64FromFile(file) {
   });
 }
 
-}
-
 function parseOCRText(text) {
   const data = { supplier: '—', invoice_no: '—', date: '—', montant_ht: null, tva: null, montant_ttc: null, account: '601100', account_label: 'Achats matières' };
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
