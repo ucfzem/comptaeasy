@@ -792,6 +792,7 @@ body {
       <button class="theme-toggle" onclick="toggleTheme()" data-tip="Mode clair/sombre">
         <svg id="theme-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v2M8 13v2M1 8h2M13 8h2M2.93 2.93l1.41 1.41M11.66 11.66l1.41 1.41M2.93 13.07l1.41-1.41M11.66 4.34l1.41-1.41"/><circle cx="8" cy="8" r="3"/></svg>
       </button>
+      <button class="icon-btn" onclick="configureAPI()" data-tip="Configurer les clés API">🔑</button>
       <div style="position:relative">
         <button class="icon-btn" onclick="toggleNotifs()">
           <div class="notif-dot"></div>
@@ -907,6 +908,8 @@ const i18n = {
   }
 };
 let currentLang='fr',darkMode=!0,notifsOpen=!1;
+let CLAUDE_KEY = localStorage.getItem('ce_claude_key') || '';
+let GEMINI_KEY = localStorage.getItem('ce_gemini_key') || '';
 
 function applyLang(lang){
   const d=i18n[lang]; if(!d)return;
@@ -1454,9 +1457,10 @@ async function runVisionOCR(file) {
       const base64 = e.target.result.split(',')[1];
       const mediaType = file.type || 'image/jpeg';
       try {
+        if (!CLAUDE_KEY) throw new Error('Clé Anthropic manquante. Configurez-la via le bouton 🔑 dans l\'en-tête.');
         const resp = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01' },
           body: JSON.stringify({
             model: 'claude-sonnet-4-6',
             max_tokens: 1000,
@@ -1547,9 +1551,10 @@ async function extractPDFPageAsImage(file) {
         const ctx = canvas.getContext('2d');
         await page.render({ canvasContext: ctx, viewport: vp }).promise;
         const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+        if (!CLAUDE_KEY) throw new Error('Clé Anthropic manquante');
         const resp = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-api-key': CLAUDE_KEY, 'anthropic-version': '2023-06-01' },
           body: JSON.stringify({
             model: 'claude-sonnet-4-6',
             max_tokens: 1000,
@@ -1740,6 +1745,21 @@ function renameCabinet() {
   const current = el.textContent;
   const name = prompt('Nom du cabinet :', current);
   if (name && name.trim()) el.textContent = name.trim();
+}
+
+// ====== API KEY CONFIGURATION ======
+function configureAPI() {
+  const anthropic = prompt('🔑 Clé API Anthropic (Claude) pour la Vision OCR :', CLAUDE_KEY || '');
+  if (anthropic !== null) { CLAUDE_KEY = anthropic.trim(); localStorage.setItem('ce_claude_key', CLAUDE_KEY); }
+  const gemini = prompt('🤖 Clé API Gemini pour l\'assistant fiscal :', GEMINI_KEY || '');
+  if (gemini !== null) { GEMINI_KEY = gemini.trim(); localStorage.setItem('ce_gemini_key', GEMINI_KEY); }
+  showToast(anthropic || gemini ? '✅ Clés API sauvegardées' : '⚠️ Aucune clé modifiée');
+}
+function showToast(msg) {
+  let t = document.getElementById('toast-msg');
+  if (!t) { t = document.createElement('div'); t.id = 'toast-msg'; t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:white;padding:10px 20px;border-radius:var(--radius-md);font-size:12px;font-weight:600;z-index:9999;transition:opacity 0.3s;font-family:var(--font-ui)'; document.body.appendChild(t); }
+  t.textContent = msg; t.style.opacity = '1'; t.style.display = 'block';
+  clearTimeout(t._t); t._t = setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.style.display = 'none', 300); }, 2500);
 }
 
 // ====== KPI TICKER ======
