@@ -1748,19 +1748,13 @@ async function runOCR() {
         const pdfData = await file.arrayBuffer();
         extractedText = await extractTextFromPDF(pdfData);
       } catch (pdfErr) {
-        console.warn('PDF extraction error:', pdfErr.message);
-        _ocrLog('extraction échec: ' + pdfErr.message + ' → tentative Vision');
-        if (!apiKey) throw new Error('PDF non extractible et aucune clé API. Ajoutez une clé Anthropic via 🔑.');
-        setOCRStatus(status, '⟳ Analyse visuelle en cours…');
-        setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Texte introuvable — analyse visuelle…</div>');
-        _ocrLog('envoi brut PDF à l\'IA…');
-        setOCRStatus(status, '☁ Envoi à l\'IA Vision…');
-        const rawBase64 = await base64FromFile(file);
-        data = await callVisionDirect(rawBase64, 'application/pdf');
+        _ocrLog('extraction échec: ' + pdfErr.message);
       }
       if (extractedText) {
         data = parseOCRText(extractedText);
-        if (!data.montant_ttc) {
+        if (data.montant_ttc) { renderOCRResult(data, status, result); return; }
+        setOCRStatus(status, '⚠ Texte non parsé');
+        if (result) {
           setOCRStatus(status, '⚠ Texte non parsé');
           if (result) {
             result.style.textAlign = 'left';
@@ -1772,6 +1766,12 @@ async function runOCR() {
           return;
         }
       }
+      if (!apiKey) throw new Error('PDF sans texte extractible et aucune clé API. Ajoutez une clé Anthropic via 🔑.');
+      _ocrLog('tentative Vision API…');
+      setOCRStatus(status, '⟳ Vision IA…');
+      setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Analyse visuelle…</div>');
+      const rawBase64 = await base64FromFile(file);
+      data = await callVisionDirect(rawBase64, 'application/pdf');
     } else if (cat === 'image') {
       setOCRStatus(status, '⟳ Vision IA en cours…');
       setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:24px;margin-bottom:8px">⟳</div>Analyse de l\'image…</div>');

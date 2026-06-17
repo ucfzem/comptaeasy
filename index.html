@@ -1748,30 +1748,27 @@ async function runOCR() {
         const pdfData = await file.arrayBuffer();
         extractedText = await extractTextFromPDF(pdfData);
       } catch (pdfErr) {
-        console.warn('PDF extraction error:', pdfErr.message);
-        _ocrLog('extraction échec: ' + pdfErr.message + ' → tentative Vision');
-        if (!apiKey) throw new Error('PDF non extractible et aucune clé API. Ajoutez une clé Anthropic via 🔑.');
-        setOCRStatus(status, '⟳ Analyse visuelle en cours…');
-        setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Texte introuvable — analyse visuelle…</div>');
-        _ocrLog('envoi brut PDF à l\'IA…');
-        setOCRStatus(status, '☁ Envoi à l\'IA Vision…');
-        const rawBase64 = await base64FromFile(file);
-        data = await callVisionDirect(rawBase64, 'application/pdf');
+        _ocrLog('extraction échec: ' + pdfErr.message);
       }
       if (extractedText) {
         data = parseOCRText(extractedText);
-        if (!data.montant_ttc) {
-          setOCRStatus(status, '⚠ Texte non parsé');
-          if (result) {
-            result.style.textAlign = 'left';
-            result.innerHTML = '<div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">⚠ Texte extrait mais non reconnu automatiquement. Copiez les données manuellement :</div>'
-              + '<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;font-family:var(--font-data);font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;color:var(--text-secondary)">'
-              + extractedText.slice(0, 5000).replace(/</g,'&lt;') + '</div>'
-              + '<button onclick="var t=this.parentElement.querySelector(\'div\').textContent;navigator.clipboard.writeText(t).then(()=>showToast(\'✅ Texte copié\'))" style="margin-top:10px;padding:6px 14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:11px">📋 Copier le texte brut</button>';
-          }
-          return;
+        if (data.montant_ttc) { renderOCRResult(data, status, result); return; }
+        setOCRStatus(status, '⚠ Texte non parsé');
+        if (result) {
+          result.style.textAlign = 'left';
+          result.innerHTML = '<div style="color:var(--text-muted);font-size:11px;margin-bottom:8px">⚠ Texte extrait mais non reconnu automatiquement. Copiez les données manuellement :</div>'
+            + '<div style="background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px;font-family:var(--font-data);font-size:11px;line-height:1.6;white-space:pre-wrap;word-break:break-word;max-height:400px;overflow-y:auto;color:var(--text-secondary)">'
+            + extractedText.slice(0, 5000).replace(/</g,'&lt;') + '</div>'
+            + '<button onclick="var t=this.parentElement.querySelector(\'div\').textContent;navigator.clipboard.writeText(t).then(()=>showToast(\'✅ Texte copié\'))" style="margin-top:10px;padding:6px 14px;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:11px">📋 Copier le texte brut</button>';
         }
+        return;
       }
+      if (!apiKey) throw new Error('PDF sans texte extractible et aucune clé API. Ajoutez une clé Anthropic via 🔑.');
+      _ocrLog('tentative Vision API…');
+      setOCRStatus(status, '⟳ Vision IA…');
+      setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Analyse visuelle…</div>');
+      const rawBase64 = await base64FromFile(file);
+      data = await callVisionDirect(rawBase64, 'application/pdf');
     } else if (cat === 'image') {
       setOCRStatus(status, '⟳ Vision IA en cours…');
       setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:24px;margin-bottom:8px">⟳</div>Analyse de l\'image…</div>');
