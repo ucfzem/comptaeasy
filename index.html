@@ -1540,6 +1540,8 @@ async function runOCR() {
     renderOCRResult(data, status, result);
   } catch (err) {
     console.warn('OCR error:', err.message);
+    if (status) { status.textContent = '❌ Erreur: ' + err.message; status.style.background = 'var(--red-dim)'; status.style.color = 'var(--red)'; }
+    if (result) { result.style.textAlign = 'center'; result.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:12px"><div style="font-size:28px;margin-bottom:8px;opacity:0.5">⚠</div><strong style="color:var(--red)">' + err.message + '</strong><br><br>Utilisez les fichiers démo ci-dessous pour tester.</div>'; }
     simulateOCR();
   }
 }
