@@ -1377,51 +1377,180 @@ function navigate(section, e) {
 }
 
 // ====== OCR FUNCTIONS ======
+function getFileCategory(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const mime = (file.type || '').toLowerCase();
+  const imageExts = ['jpg','jpeg','png','webp','bmp','tiff','tif','heic','heif'];
+  if (mime.startsWith('image/') || imageExts.includes(ext)) return 'image';
+  if (mime === 'application/pdf' || ext === 'pdf') return 'pdf';
+  return 'unknown';
+}
+
+function validateFiles(fileList) {
+  const maxSize = 50 * 1024 * 1024;
+  const allowedExts = ['pdf','jpg','jpeg','png','webp','bmp','tiff','tif','heic','heif'];
+  const rejected = [];
+  const valid = [];
+  for (const f of fileList) {
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    if (!allowedExts.includes(ext)) rejected.push(f.name + ' (format non supporté)');
+    else if (f.size > maxSize) rejected.push(f.name + ' (taille > 50 MB)');
+    else valid.push(f);
+  }
+  if (rejected.length) showToast('⚠️ ' + rejected.length + ' fichier(s) rejeté(s)');
+  return valid;
+}
+
+async function convertHEICtoJPEG(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (!['heic','heif'].includes(ext)) return file;
+  if (typeof heic2any === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+      s.onload = resolve; s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  const blob = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+  return new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+}
+
+function base64FromFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function updateOCRProgress(percent, message) {
+  const status = document.getElementById('ocr-status');
+  const result = document.getElementById('ocr-result');
+  if (status) { status.textContent = '⟳ ' + percent + '%'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
+  if (result) { result.innerHTML = '<div style="text-align:center;color:var(--text-muted)"><div style="font-size:20px;margin-bottom:8px">⟳</div><div>' + message + '</div><div style="margin-top:8px;background:var(--bg-input);height:4px;border-radius:2px;width:200px;margin-left:auto;margin-right:auto"><div style="width:' + percent + '%;height:100%;background:var(--accent);border-radius:2px;transition:width 0.3s"></div></div></div>'; }
+}
+
 function parseOCRText(text) {
   const data = { supplier: '—', invoice_no: '—', date: '—', montant_ht: null, tva: null, montant_ttc: null, account: '601100', account_label: 'Achats matières' };
   const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean);
   const full = text.toLowerCase();
-  const rawNums = text.match(/[\d\s]{1,10}[.,]\d{2}/g) || [];
-  const amounts = rawNums.map(s => parseFloat(s.replace(/\s/g,'').replace(',','.'))).filter(n => !isNaN(n) && n > 10 && n < 10000000).sort((a,b)=>a-b);
-  if (amounts.length >= 2) {
-    data.montant_ht = amounts[amounts.length - 2];
-    data.montant_ttc = amounts[amounts.length - 1];
-    data.tva = Math.round((data.montant_ttc - data.montant_ht) * 100) / 100;
-  } else if (amounts.length === 1) {
-    data.montant_ttc = amounts[0];
-    data.tva = Math.round(amounts[0] * 20 / 120 * 100) / 100;
-    data.montant_ht = Math.round((amounts[0] - data.tva) * 100) / 100;
+
+  // Détection montants par patterns ciblés
+  const amountPatterns = [
+    /(?:total\s*(?:ttc|toutes\s*taxes|général|facture|à\s*payer))\s*[:\s]*([\d\s]{1,12}[.,]\d{2})/i,
+    /(?:montant\s*(?:ht|hors\s*taxe|net))\s*[:\s]*([\d\s]{1,12}[.,]\d{2})/i,
+    /(?:tva|taxe)\s*(?:\(?\d{1,2}[.,]?\d{0,2}%?\)?)?\s*[:\s]*([\d\s]{1,10}[.,]\d{2})/i,
+    /([\d\s]{1,12}[.,]\d{2})\s*[€$£]/g,
+  ];
+  const foundAmounts = [];
+  for (const pattern of amountPatterns) {
+    let match;
+    if (pattern.global) pattern.lastIndex = 0;
+    while ((match = pattern.exec(text)) !== null) {
+      const val = parseFloat(match[1].replace(/\s/g,'').replace(',','.'));
+      if (!isNaN(val) && val > 0.5) foundAmounts.push(val);
+    }
   }
+  const unique = [...new Set(foundAmounts.map(a => Math.round(a*100)/100))].sort((a,b)=>a-b);
+  if (unique.length >= 2) {
+    const ttc = unique[unique.length - 1];
+    const ht = unique[unique.length - 2];
+    const tva = Math.round((ttc - ht) * 100) / 100;
+    const tvaRate = ht > 0 ? (tva / ht) * 100 : 0;
+    if (tvaRate > 15 && tvaRate < 25) {
+      data.montant_ttc = ttc; data.montant_ht = ht; data.tva = tva;
+    }
+  }
+  if (!data.montant_ttc) {
+    const rawNums = text.match(/[\d\s]{1,10}[.,]\d{2}/g) || [];
+    const amounts = rawNums.map(s => parseFloat(s.replace(/\s/g,'').replace(',','.'))).filter(n => !isNaN(n) && n > 10 && n < 10000000).sort((a,b)=>a-b);
+    if (amounts.length >= 2) {
+      data.montant_ht = amounts[amounts.length - 2];
+      data.montant_ttc = amounts[amounts.length - 1];
+      data.tva = Math.round((data.montant_ttc - data.montant_ht) * 100) / 100;
+    } else if (amounts.length === 1) {
+      data.montant_ttc = amounts[0];
+      data.tva = Math.round(amounts[0] * 20 / 120 * 100) / 100;
+      data.montant_ht = Math.round((amounts[0] - data.tva) * 100) / 100;
+    }
+  }
+
+  // N° Facture
+  const invPatterns = [
+    /(?:n[°o]?\s*(?:facture|fac|inv|document|doc))\s*[#:/\s]*([A-Za-z0-9\-_]{4,30})/i,
+    /(?:facture|invoice)\s*(?:n[°o]?)?\s*[#:/\s]*([A-Za-z0-9\-_]{4,30})/i,
+    /(?:ref|réf)[.:\s]*([A-Za-z0-9\-_]{4,30})/i,
+  ];
+  for (const p of invPatterns) {
+    const m = text.match(p);
+    if (m) { data.invoice_no = m[1].toUpperCase().trim(); break; }
+  }
+  if (!data.invoice_no || data.invoice_no === '—') {
+    const m = text.match(/([A-Z]{2,6}[-_]?\d{4}[-_]\d{2,6})/);
+    if (m) data.invoice_no = m[1].toUpperCase();
+  }
+
+  // Date
+  const datePatterns = [
+    /(?:date|émis|établi|facture)\s*(?:le|:)?\s*(\d{1,2})[\/\-. ](\d{1,2})[\/\-. ](\d{4})/i,
+    /(?:du\s+)(\d{1,2})[\/\-. ](\d{1,2})[\/\-. ](\d{4})/i,
+  ];
+  for (const p of datePatterns) {
+    const m = text.match(p);
+    if (m) { data.date = m[1].padStart(2,'0')+'/'+m[2].padStart(2,'0')+'/'+m[3]; break; }
+  }
+  if (!data.date || data.date === '—') {
+    const dm = text.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+    if (dm) data.date = dm[1].padStart(2,'0')+'/'+dm[2].padStart(2,'0')+'/'+dm[3];
+  }
+
+  // Fournisseur
   for (const line of lines) {
     const l = line.toLowerCase();
-    if (!data.invoice_no || data.invoice_no === '—') {
-      const m = line.match(/(?:N[°o]?\s*(?:facture|fac|inv)[:\s#]*)?([A-Z]{2,6}[-_]?\d{4}[-_]\d{2,6})/i);
-      if (m) data.invoice_no = m[1].toUpperCase();
+    if ((l.includes('sarl')||l.includes('eurl')||l.includes(' sa ')||l.includes('sas ')||l.includes('entreprise')||l.includes('sté')||l.includes('fournisseur')||l.includes('émetteur')||l.includes('vendeur')) && line.length>4&&line.length<80) {
+      data.supplier = line.replace(/^(fournisseur|émetteur|client|société|doit|à|vendeur)\s*[:\-]?\s*/i,'').trim().slice(0,60) || data.supplier;
     }
-    if (!data.date || data.date === '—') {
-      const dm = line.match(/(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
-      if (dm) data.date = dm[1].padStart(2,'0')+'/'+dm[2].padStart(2,'0')+'/'+dm[3];
+  }
+  if (data.supplier === '—') {
+    const sm = text.match(/(?:raison\s*sociale|société)\s*[:\-]?\s*([A-Za-zÀ-ÿ&\s]{4,60})/i);
+    if (sm) data.supplier = sm[1].trim().slice(0,60);
+  }
+
+  // Compte comptable
+  const accountMap = {
+    loyer:'613200', transport:'624100', honoraire:'622700', conseil:'622700',
+    prestation:'622700', téléphone:'626000', internet:'626000', telecom:'626000',
+    publicité:'623000', marketing:'623000', assurance:'616000', fourniture:'601100',
+    achat:'601100', énergie:'606100', électricité:'606100', eau:'606100',
+    maintenance:'615500', logiciel:'613500', abonnement:'626000', location:'613200',
+  };
+  for (const [keyword, ac] of Object.entries(accountMap)) {
+    if (full.includes(keyword)) {
+      data.account = ac;
+      data.account_label = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+      break;
     }
-    if ((l.includes('sarl')||l.includes('eurl')||l.includes(' sa ')||l.includes('sas ')||l.includes('entreprise')||l.includes('sté')||l.includes('fournisseur')||l.includes('émetteur')) && line.length>4&&line.length<80) {
-      data.supplier = line.replace(/^(fournisseur|émetteur|client|société|doit|à)\s*[:\-]?\s*/i,'').trim().slice(0,60)||data.supplier;
-    }
-    if (l.includes('loyer')) { data.account='613200'; data.account_label='Loyers'; }
-    else if (l.includes('transport')) { data.account='624100'; data.account_label='Transports'; }
-    else if (l.includes('honoraire')||l.includes('conseil')||l.includes('prestation')) { data.account='622700'; data.account_label='Honoraires'; }
-    else if (l.includes('téléphone')||l.includes('internet')||l.includes('telecoms')) { data.account='626000'; data.account_label='Télécoms'; }
-    else if (l.includes('publicité')||l.includes('marketing')) { data.account='623000'; data.account_label='Publicité'; }
-    else if (l.includes('assurance')) { data.account='616000'; data.account_label='Assurances'; }
   }
   return data;
 }
 
 function clearOCRSelection() {
   window._ocrFiles = null;
-  document.getElementById('file-chips').innerHTML = '';
-  document.getElementById('analyze-btn').style.display = 'none';
-  document.getElementById('clear-files-btn').style.display = 'none';
+  const chips = document.getElementById('file-chips');
+  if (chips) chips.innerHTML = '';
+  const btn = document.getElementById('analyze-btn');
+  if (btn) btn.style.display = 'none';
+  const clearBtn = document.getElementById('clear-files-btn');
+  if (clearBtn) clearBtn.style.display = 'none';
   const preview = document.getElementById('ocr-preview');
   if (preview) preview.style.display = 'none';
+  const previewImg = document.getElementById('preview-img');
+  if (previewImg && previewImg.dataset.objectUrl) {
+    URL.revokeObjectURL(previewImg.dataset.objectUrl);
+    previewImg.dataset.objectUrl = '';
+  }
   const result = document.getElementById('ocr-result');
   if (result) { result.style.textAlign = 'center'; result.innerHTML = '<div><svg width="32" height="32" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1" style="margin:0 auto 12px;opacity:0.3;display:block"><circle cx="6" cy="6" r="4"/><path d="M10 10l4 4"/></svg>Importez un fichier pour lancer l\'analyse</div>'; }
   const status = document.getElementById('ocr-status');
@@ -1429,14 +1558,24 @@ function clearOCRSelection() {
 }
 
 // ====== HANDLE FILE SELECTION (preview + store) ======
-function handleOCRFile(files) {
+async function handleOCRFile(files) {
   if (!files || files.length === 0) return;
-  window._ocrFiles = files;
-  const file = files[0];
-  const isImage = file.type.startsWith('image/');
-  const isPDF   = file.type === 'application/pdf';
+  const fileList = Array.from(files);
+  const validFiles = validateFiles(fileList);
+  if (validFiles.length === 0) { showToast('Aucun fichier valide'); return; }
+  // Conversion HEIC si nécessaire
+  const converted = [];
+  for (const f of validFiles) {
+    try { converted.push(await convertHEICtoJPEG(f)); }
+    catch(e) { console.warn('HEIC conversion failed:', f.name); converted.push(f); }
+  }
+  window._ocrFiles = converted;
+  const file = converted[0];
+  const cat = getFileCategory(file);
+  const isImage = cat === 'image';
+  const isPDF = cat === 'pdf';
   const chips = document.getElementById('file-chips');
-  if (chips) chips.innerHTML = Array.from(files).map(f => `<span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary);margin:0">${isPDF?'📄':'🖼'} ${f.name}</span>`).join('');
+  if (chips) chips.innerHTML = converted.map(f => '<span style="background:var(--bg-input);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--text-secondary);margin:0">' + (getFileCategory(f)==='pdf'?'📄':'🖼') + ' ' + f.name + '</span>').join('');
   const clearBtn = document.getElementById('clear-files-btn');
   if (clearBtn) clearBtn.style.display = 'block';
   const btn = document.getElementById('analyze-btn');
@@ -1444,51 +1583,107 @@ function handleOCRFile(files) {
   const previewBox = document.getElementById('ocr-preview');
   const previewImg = document.getElementById('preview-img');
   const previewPDF = document.getElementById('preview-pdf');
-  const prevName   = document.getElementById('preview-name');
-  const prevSize   = document.getElementById('preview-size');
+  const prevName = document.getElementById('preview-name');
+  const prevSize = document.getElementById('preview-size');
   if (previewBox) previewBox.style.display = 'block';
   if (isImage && previewImg) {
     if (previewPDF) previewPDF.style.display = 'none';
     previewImg.style.display = 'block';
+    if (previewImg.dataset.objectUrl) URL.revokeObjectURL(previewImg.dataset.objectUrl);
     const url = URL.createObjectURL(file);
+    previewImg.dataset.objectUrl = url;
     previewImg.src = url;
-    previewImg.onload = () => URL.revokeObjectURL(url);
+    previewImg.onerror = () => { URL.revokeObjectURL(url); previewImg.style.display = 'none'; };
   } else if (isPDF && previewPDF) {
     if (previewImg) previewImg.style.display = 'none';
     previewPDF.style.display = 'flex';
     if (prevName) prevName.textContent = file.name;
     if (prevSize) prevSize.textContent = (file.size / 1024).toFixed(1) + ' Ko';
   }
-  const status = document.getElementById('ocr-status');
-  const result = document.getElementById('ocr-result');
-  if (status) { status.textContent = 'Fichier sélectionné'; status.style.background = 'var(--accent-glow)'; status.style.color = 'var(--accent)'; }
-  if (result) { result.style.textAlign = 'center'; result.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Cliquez sur <strong style="color:var(--accent)">Analyser la facture</strong> pour lancer l\'OCR</span>'; }
+  const statusEl = document.getElementById('ocr-status');
+  const resultEl = document.getElementById('ocr-result');
+  if (statusEl) { statusEl.textContent = 'Fichier sélectionné'; statusEl.style.background = 'var(--accent-glow)'; statusEl.style.color = 'var(--accent)'; }
+  if (resultEl) { resultEl.style.textAlign = 'center'; resultEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Cliquez sur <strong style="color:var(--accent)">Analyser la facture</strong> pour lancer l\'OCR</span>'; }
 }
 
-// ====== VISION OCR VIA BACKEND PROXY (avoids CORS) ======
+// ====== TESSERACT.js LOCAL FALLBACK ======
+let tesseractWorker = null;
+async function getTesseractWorker() {
+  if (tesseractWorker) return tesseractWorker;
+  if (typeof Tesseract === 'undefined') {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+      s.onload = resolve; s.onerror = () => reject(new Error('Tesseract.js non chargé'));
+      document.head.appendChild(s);
+    });
+  }
+  tesseractWorker = await Tesseract.createWorker('fra', 1, {
+    logger: m => { if (m.status === 'recognizing text') updateOCRProgress(Math.round(m.progress * 100), 'OCR local...'); }
+  });
+  return tesseractWorker;
+}
+
+async function localImageOCR(file) {
+  const worker = await getTesseractWorker();
+  const { data: { text } } = await worker.recognize(file);
+  return text;
+}
+
+// ====== VISION OCR VIA BACKEND PROXY ======
 async function callVisionProxy(base64, mediaType) {
   const apiBase = window.COMPTAEASY_API || '';
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 35000);
   const resp = await fetch(apiBase + '/api/ocr/vision', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: base64, media_type: mediaType || 'image/jpeg' })
+    body: JSON.stringify({ image: base64, media_type: mediaType || 'image/jpeg' }),
+    signal: ctrl.signal
   });
-  if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error || `HTTP ${resp.status}`); }
+  clearTimeout(tid);
+  if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error || 'HTTP ' + resp.status); }
   return resp.json();
 }
 
 async function runVisionOCR(file) {
+  const base64 = await base64FromFile(file);
+  try {
+    return await callVisionProxy(base64, file.type || 'image/jpeg');
+  } catch (apiError) {
+    console.warn('API Vision indisponible, fallback Tesseract local:', apiError.message);
+    const text = await localImageOCR(file);
+    return parseOCRText(text);
+  }
+}
+
+// ====== PDF.js DYNAMIC LOAD ======
+function loadPDFJS() {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      try {
-        const base64 = e.target.result.split(',')[1];
-        const mediaType = file.type || 'image/jpeg';
-        resolve(await callVisionProxy(base64, mediaType));
-      } catch(err) { reject(err); }
+    if (typeof pdfjsLib !== 'undefined') { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
+    s.type = 'module';
+    s.onload = () => {
+      import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs')
+        .then(mod => { window.pdfjsLib = mod; mod.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs'; resolve(); })
+        .catch(() => {
+          // Fallback v3
+          const s2 = document.createElement('script');
+          s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+          s2.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; resolve(); };
+          s2.onerror = reject;
+          document.head.appendChild(s2);
+        });
     };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    s.onerror = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s2.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; resolve(); };
+      s2.onerror = reject;
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s);
   });
 }
 
@@ -1496,81 +1691,93 @@ async function runVisionOCR(file) {
 function extractTextFromPDF(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = function(e) {
-      const buffer = e.target.result;
-      if (typeof pdfjsLib === 'undefined') { reject(new Error('PDF.js non chargé')); return; }
-      pdfjsLib.getDocument({ data: buffer }).promise
-        .then(pdf => Promise.all(Array.from({length: pdf.numPages}, (_, i) => i + 1).map(n =>
-          pdf.getPage(n).then(p => p.getTextContent().then(tc => tc.items.map(it => it.str).join(' ')))
-        )))
-        .then(pages => resolve(pages.join('\n')))
-        .catch(reject);
+    reader.onload = async function(e) {
+      try {
+        if (typeof pdfjsLib === 'undefined') await loadPDFJS();
+        const buffer = e.target.result;
+        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+        const pages = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const tc = await page.getTextContent();
+          const text = tc.items.map(it => it.str).join(' ');
+          pages.push(text);
+        }
+        const fullText = pages.join('\n');
+        if (!fullText.trim()) { reject(new Error('PDF_SCANNED')); return; }
+        resolve(fullText);
+      } catch(err) { reject(err); }
     };
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error('Impossible de lire le fichier PDF'));
     reader.readAsArrayBuffer(file);
   });
 }
 
-// ====== RUN OCR (called by the Analyser button) ======
+// ====== RUN OCR ======
 async function runOCR() {
-  const files  = window._ocrFiles;
+  const files = window._ocrFiles;
   const status = document.getElementById('ocr-status');
   const result = document.getElementById('ocr-result');
   if (!files || files.length === 0) { simulateOCR(); return; }
-  const file    = files[0];
-  const ext = file.name.split('.').pop().toLowerCase();
-  const isImage = file.type.startsWith('image/') || /^(jpg|jpeg|png|webp|bmp|tiff)$/.test(ext);
-  const isPDF   = file.type === 'application/pdf' || ext === 'pdf';
+  const file = files[0];
+  const cat = getFileCategory(file);
   if (status) { status.textContent = '⟳ Analyse…'; status.style.background = 'var(--amber-dim)'; status.style.color = 'var(--amber)'; }
-  if (result) { result.style.textAlign = 'center'; result.innerHTML = `<div style="color:var(--text-muted);font-size:12px"><div style="font-size:24px;margin-bottom:8px">⟳</div>${isPDF ? 'Extraction du texte PDF…' : 'Vision IA en cours…'}</div>`; }
+  if (result) { result.style.textAlign = 'center'; result.innerHTML = '<div style="color:var(--text-muted);font-size:12px"><div style="font-size:24px;margin-bottom:8px">⟳</div>' + (cat === 'pdf' ? 'Extraction du texte PDF…' : 'Vision IA en cours…') + '</div>'; }
   try {
     let data;
-    if (isPDF) {
-      const text = await extractTextFromPDF(file);
-      data = parseOCRText(text);
-      if (!data.montant_ttc) {
-        if (result) result.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">🔍</div>PDF sans texte — Vision IA…</div>';
-        data = await extractPDFPageAsImage(file);
+    if (cat === 'pdf') {
+      try {
+        const text = await extractTextFromPDF(file);
+        data = parseOCRText(text);
+        if (!data.montant_ttc) {
+          if (result) result.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">🔍</div>PDF sans texte — Vision IA…</div>';
+          data = await extractPDFPageAsImage(file);
+        }
+      } catch (err) {
+        if (err.message === 'PDF_SCANNED') {
+          if (result) result.innerHTML = '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>PDF scanné — conversion en image…</div>';
+          data = await extractPDFPageAsImage(file);
+        } else { throw err; }
       }
-    } else if (isImage) {
+    } else if (cat === 'image') {
       data = await runVisionOCR(file);
     } else { throw new Error('Format non supporté'); }
-    data.account       = data.account       || '601100';
+    data.account = data.account || '601100';
     data.account_label = data.account_label || 'Achats matières';
     renderOCRResult(data, status, result);
   } catch (err) {
     console.warn('OCR error:', err.message);
-    if (status) { status.textContent = '❌ Erreur: ' + err.message; status.style.background = 'var(--red-dim)'; status.style.color = 'var(--red)'; }
+    if (status) { status.textContent = '❌ ' + err.message; status.style.background = 'var(--red-dim)'; status.style.color = 'var(--red)'; }
     if (result) { result.style.textAlign = 'center'; result.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:12px"><div style="font-size:28px;margin-bottom:8px;opacity:0.5">⚠</div><strong style="color:var(--red)">' + err.message + '</strong><br><br>Utilisez les fichiers démo ci-dessous pour tester.</div>'; }
     simulateOCR();
   }
 }
 
-// ====== PDF PAGE → IMAGE → VISION (for scanned PDFs) ======
+// ====== PDF PAGE → IMAGE → VISION ======
 async function extractPDFPageAsImage(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async function(e) {
-      try {
-        const pdf    = await pdfjsLib.getDocument({ data: e.target.result }).promise;
-        const page   = await pdf.getPage(1);
-        const scale  = 2;
-        const vp     = page.getViewport({ scale });
-        const canvas = document.createElement('canvas');
-        canvas.width  = vp.width;
-        canvas.height = vp.height;
-        const ctx = canvas.getContext('2d');
-        await page.render({ canvasContext: ctx, viewport: vp }).promise;
-        const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
-        resolve(await callVisionProxy(base64, 'image/jpeg'));
-      } catch(err) { reject(err); }
-    };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
+  if (typeof pdfjsLib === 'undefined') await loadPDFJS();
+  const buffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const page = await pdf.getPage(1);
+  const scale = 2;
+  const vp = page.getViewport({ scale });
+  const canvas = document.createElement('canvas');
+  canvas.width = vp.width;
+  canvas.height = vp.height;
+  const ctx = canvas.getContext('2d');
+  await page.render({ canvasContext: ctx, viewport: vp }).promise;
+  const base64 = canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+  try {
+    return await callVisionProxy(base64, 'image/jpeg');
+  } catch (apiError) {
+    console.warn('Vision API failed for PDF, Tesseract fallback:', apiError.message);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+    const text = await localImageOCR(new File([blob], 'page.jpg', { type: 'image/jpeg' }));
+    return parseOCRText(text);
+  }
 }
 
-// ====== SIMULATE OCR (demo mode) ======
+// ====== SIMULATE OCR ======
 function simulateOCR(type) {
   const status = document.getElementById('ocr-status');
   const result = document.getElementById('ocr-result');
@@ -1658,9 +1865,13 @@ function initOCRUpload() {
   if (!dropzone || !fileInput) return;
   function openPicker(e) { e.preventDefault(); e.stopPropagation(); fileInput.click(); }
   if (browseBtn) browseBtn.addEventListener('click', openPicker);
+  dropzone.setAttribute('tabindex', '0');
+  dropzone.setAttribute('role', 'button');
+  dropzone.setAttribute('aria-label', 'Déposer des fichiers ici ou appuyer pour parcourir');
   dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; dropzone.style.background = 'rgba(79,110,255,0.08)'; });
   dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = 'var(--border)'; dropzone.style.background = 'var(--bg-input)'; });
   dropzone.addEventListener('drop', e => { e.preventDefault(); dropzone.style.borderColor = 'var(--border)'; dropzone.style.background = 'var(--bg-input)'; handleOCRFile(e.dataTransfer.files); });
+  dropzone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
   fileInput.addEventListener('change', () => { if (fileInput.files.length) handleOCRFile(fileInput.files); fileInput.value = ''; });
 }
 
@@ -1760,6 +1971,19 @@ function animateKPI(){
   let v=2847500;
   setInterval(()=>{v+=Math.floor((Math.random()-0.3)*500);const el=document.getElementById('kpi-ca');if(el)el.textContent=v.toLocaleString('fr-FR')},4000)
 }
+
+// ====== CLEANUP ======
+function cleanupOCRResources() {
+  if (window._ocrFiles) {
+    window._ocrFiles.forEach(f => { if (f._url) { URL.revokeObjectURL(f._url); } });
+    window._ocrFiles = null;
+  }
+  if (window._tesseractWorker) {
+    try { window._tesseractWorker.terminate(); } catch(_) {}
+    window._tesseractWorker = null;
+  }
+}
+window.addEventListener('beforeunload', cleanupOCRResources);
 
 // ====== INIT ======
 applyLang('fr');
