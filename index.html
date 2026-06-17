@@ -1136,6 +1136,7 @@ const SAISIE_HTML = `
           Importez un fichier pour lancer l'analyse
         </div>
       </div>
+      <pre id="ocr-debug" style="display:none;margin:0;padding:8px 12px;font-size:10px;line-height:1.4;color:var(--text-muted);background:var(--bg-input);border-top:1px solid var(--border);max-height:120px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;font-family:monospace"></pre>
     </div>
   </div>
   <div class="card">
@@ -1600,6 +1601,7 @@ async function handleOCRFile(files) {
 // ====== VISION OCR VIA ANTHROPIC DIRECT ======
 async function callVisionDirect(base64Image) {
   const apiKey = localStorage.getItem('ce_claude_key');
+  _ocrLog('callVisionDirect: clé=' + (apiKey ? apiKey.slice(0,8) + '…' : 'manquante'));
   if (!apiKey) throw new Error('Clé API Anthropic manquante — ajoutez-la via 🔑');
 
   const VISION_PROMPT = 'Tu es un OCR comptable. Extrais les données de cette facture et réponds UNIQUEMENT en JSON valide, sans backticks ni explication, avec exactement ces clés:\n{\n  "supplier": "nom du fournisseur ou émetteur",\n  "invoice_no": "numéro de facture",\n  "date": "JJ/MM/AAAA",\n  "montant_ht": 0.00,\n  "tva": 0.00,\n  "montant_ttc": 0.00,\n  "account": "601100",\n  "account_label": "Achats matières"\n}\nSi une valeur est absente, utilise null pour les nombres et "—" pour les textes.\nPour le compte comptable, déduis-le du type de prestation (loyer→613200, honoraires→622700, télécom→626000, publicité→623000, fournitures→601100, transport→624100).';
@@ -1694,11 +1696,19 @@ async function extractTextFromPDF(pdfData, timeoutMs = 20000) {
 }
 
 // ====== RUN OCR ======
+function _ocrLog(msg) {
+  const el = document.getElementById('ocr-debug');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = new Date().toLocaleTimeString() + ' ' + msg + '\n' + el.textContent;
+}
+
 function setOCRStatus(el, msg, bg, fg) {
   if (!el) return;
   el.textContent = msg;
   el.style.background = bg || 'var(--amber-dim)';
   el.style.color = fg || 'var(--amber)';
+  _ocrLog('status: ' + msg);
 }
 function setOCRResult(el, html) {
   if (!el) return;
@@ -1736,11 +1746,14 @@ async function runOCR() {
       } catch (pdfErr) {
         const isScanned = pdfErr.message === 'PDF_SCANNED' || pdfErr.message === 'PDF extraction timeout';
         console.warn('PDF extraction issue:', isScanned ? pdfErr.message : pdfErr);
+        _ocrLog('extraction échec: ' + pdfErr.message);
         if (!apiKey) throw new Error('PDF sans texte extractible et aucune clé API pour la reconnaissance visuelle. Ajoutez une clé Anthropic via 🔑.');
         setOCRStatus(status, '⟳ Analyse visuelle en cours…');
         setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Texte introuvable — analyse visuelle…</div>');
+        _ocrLog('rendu PDF en image…');
         const pdfData = await file.arrayBuffer();
         const base64 = await renderPDFtoBase64(pdfData);
+        _ocrLog('rendu OK, envoi Vision…');
         setOCRStatus(status, '☁ Envoi à l\'IA Vision…');
         data = await callVisionDirect(base64);
       }
@@ -1769,6 +1782,7 @@ async function runOCR() {
     renderOCRResult(data, status, result);
   } catch (err) {
     console.warn('OCR error:', err.message);
+    _ocrLog('ERREUR: ' + err.message);
     setOCRStatus(status, '❌ ' + err.message, 'var(--red-dim)', 'var(--red)');
     setOCRResult(result, '<div style="padding:20px;color:var(--text-muted);font-size:12px"><div style="font-size:28px;margin-bottom:8px;opacity:0.5">⚠</div><strong style="color:var(--red)">' + err.message + '</strong><br><br>Utilisez les fichiers démo ci-dessous pour tester.</div>');
     simulateOCR();
