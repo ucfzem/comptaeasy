@@ -651,6 +651,75 @@ body {
 .notif-text { font-size: 11.5px; color: var(--text-secondary); line-height: 1.45; }
 .notif-text strong { color: var(--text-primary); font-weight: 600; }
 .notif-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; font-family: var(--font-data); }
+.ocr-field {
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  position: relative;
+}
+.ocr-field-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-bottom: 3px;
+}
+.ocr-field-value {
+  color: var(--text-primary);
+  font-weight: 500;
+  user-select: text;
+  -webkit-user-select: text;
+  cursor: text;
+  word-break: break-all;
+}
+.ocr-field-value.mono {
+  font-family: var(--font-data);
+}
+.ocr-copy-btn {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 10px;
+  padding: 3px 7px;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: var(--transition);
+  line-height: 1.4;
+}
+.ocr-copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.ocr-copy-btn.copied { color: var(--green); border-color: var(--green); }
+.ocr-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.ocr-action-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-ui);
+  transition: var(--transition);
+  text-align: center;
+}
+.ocr-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ocr-action-btn.primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.ocr-action-btn.primary:hover { background: var(--accent-dim); }
 </style>
 <script>(function(){var t='cfut'+'_IuU3BjWacQMd1HsdpqlLUUV6QIidz20ZNBSX6oGtb0de52ae';var s=document.createElement('script');s.src='https://static.cloudflareinsights.com/beacon.min.js';s.defer=!0;s.setAttribute('data-cf-beacon',JSON.stringify({token:t}));document.head.appendChild(s)})();</script>
 </head>
@@ -1282,30 +1351,11 @@ function handleOCRFile(files) {
     return;
   }
   window.CE.analyzeOCR(file).then(data => {
-    URL.revokeObjectURL(previewUrl);
     if (data.success) {
-      status.textContent = 'Terminé';
-      status.style.background = 'var(--green-dim)';
-      status.style.color = 'var(--green)';
-      result.innerHTML = `
-        <div style="text-align:start">
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md);margin-bottom:10px">
-            <span style="font-size:24px">${isImage ? '🖼' : '📄'}</span>
-            <div style="flex:1;overflow:hidden">
-              <div style="color:var(--text-primary);font-weight:500;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${file.name}</div>
-              <div style="color:var(--text-muted);font-size:11px">${(file.size / 1024).toFixed(1)} Ko</div>
-            </div>
-            <span class="status-pill validated" style="font-size:11px">${data.confidence || 97}%</span>
-          </div>
-          ${previewUrl ? `<img src="${previewUrl}" style="max-width:100%;max-height:160px;border-radius:var(--radius-md);display:block;margin:0 auto 10px">` : ''}
-          <div style="display:grid;gap:10px">
-            <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Fournisseur</span><div style="color:var(--text-primary);font-weight:500">${data.data.supplier}</div></div>
-            <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Montant TTC</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">${data.data.montant_ttc.toLocaleString('fr-FR')} €</div></div>
-            <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">TVA</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">${data.data.tva.toLocaleString('fr-FR')} € (20%)</div></div>
-            <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Compte suggéré</span><div><span style="color:var(--accent);font-weight:600;font-family:var(--font-data)">${data.data.account}</span> <span style="color:var(--text-secondary)">— ${data.data.account_label}</span></div></div>
-          </div>
-        </div>`;
+      URL.revokeObjectURL(previewUrl);
+      renderOCRResult(data.data, status, result);
     } else {
+      URL.revokeObjectURL(previewUrl);
       throw new Error(data.error || 'Échec de l\'analyse OCR');
     }
   }).catch(err => {
@@ -1354,24 +1404,163 @@ function initOCRUpload() {
 function simulateOCR() {
   const status = document.getElementById('ocr-status');
   const result = document.getElementById('ocr-result');
-  status.textContent = 'Analyse en cours…';
-  status.style.background = 'var(--amber-dim)';
-  status.style.color = 'var(--amber)';
-  result.innerHTML = '<span style="color:var(--text-muted);font-style:italic">⟳ Reconnaissance en cours…</span>';
+  if (status) {
+    status.textContent = 'Analyse en cours…';
+    status.style.background = 'var(--amber-dim)';
+    status.style.color = 'var(--amber)';
+  }
+  if (result) {
+    result.innerHTML = '<span style="color:var(--text-muted);font-style:italic">⟳ Reconnaissance en cours…</span>';
+  }
   setTimeout(() => {
-    status.textContent = 'Terminé';
-    status.style.background = 'var(--green-dim)';
-    status.style.color = 'var(--green)';
-    result.innerHTML = `
-      <div style="text-align:start">
-        <div style="display:grid;gap:10px">
-          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Fournisseur</span><div style="color:var(--text-primary);font-weight:500">K. Abdessalam</div></div>
-          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Montant TTC</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">1 500,00 €</div></div>
-          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">TVA</span><div style="color:var(--text-primary);font-weight:500;font-family:var(--font-data)">250,00 € (20%)</div></div>
-          <div style="padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-md)"><span style="color:var(--text-muted);font-size:11px">Compte suggéré</span><div><span style="color:var(--accent);font-weight:600;font-family:var(--font-data)">601100</span> <span style="color:var(--text-secondary)">— Achats matières</span></div></div>
-        </div>
-      </div>`;
+    renderOCRResult({
+      supplier: 'K. Abdessalam',
+      invoice_no: 'FAC-2026-0847',
+      date: '12/01/2026',
+      montant_ht: 1250.00,
+      tva: 250.00,
+      montant_ttc: 1500.00,
+      account: '601100',
+      account_label: 'Achats matières',
+    }, status, result);
   }, 1500);
+}
+
+// ====== OCR RESULT RENDERER ======
+let _ocrData = null;
+function fmt(v) {
+  return v != null ? Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2 }) : '0,00';
+}
+function renderOCRResult(data, statusEl, resultEl) {
+  if (statusEl) {
+    statusEl.textContent = 'Terminé';
+    statusEl.style.background = 'var(--green-dim)';
+    statusEl.style.color = 'var(--green)';
+  }
+  _ocrData = data;
+  window._ocrData = data;
+  if (!resultEl) return;
+  const fields = [
+    { label: 'Fournisseur',    key: 'supplier',      value: data.supplier || '—',          mono: false },
+    { label: 'N° Facture',     key: 'invoice_no',    value: data.invoice_no || '—',        mono: true  },
+    { label: 'Date',           key: 'date',           value: data.date || '—',              mono: true  },
+    { label: 'Montant HT',     key: 'montant_ht',    value: fmt(data.montant_ht) + ' €',   mono: true  },
+    { label: 'TVA (20%)',      key: 'tva',            value: fmt(data.tva) + ' €',          mono: true  },
+    { label: 'Montant TTC',    key: 'montant_ttc',   value: fmt(data.montant_ttc) + ' €',  mono: true  },
+    { label: 'Compte suggéré', key: 'account',       value: (data.account || '601100') + ' — ' + (data.account_label || 'Achats matières'), mono: true },
+  ];
+  resultEl.innerHTML = `
+    <div style="text-align:start">
+      <div style="display:grid;gap:8px" id="ocr-fields">
+        ${fields.map(f => `
+          <div class="ocr-field">
+            <div class="ocr-field-label">${f.label}</div>
+            <div class="ocr-field-value${f.mono ? ' mono' : ''}"
+                 data-key="${f.key}" data-raw="${f.value}">${f.value}</div>
+            <button class="ocr-copy-btn" onclick="copyField('${f.value.replace(/'/g,"\\'")}', this)" title="Copier">⎘ Copier</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="ocr-actions">
+        <button class="ocr-action-btn primary" onclick="copyAllOCR()">📋 Tout copier</button>
+        <button class="ocr-action-btn" onclick="downloadOCR('txt')">⬇ .TXT</button>
+        <button class="ocr-action-btn" onclick="downloadOCR('csv')">⬇ .CSV</button>
+        <button class="ocr-action-btn" onclick="downloadOCR('json')">⬇ .JSON</button>
+      </div>
+    </div>`;
+}
+function copyField(value, btn) {
+  navigator.clipboard.writeText(value).then(() => {
+    btn.textContent = '✓ Copié';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ Copier'; btn.classList.remove('copied'); }, 1800);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = value;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '✓ Copié';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ Copier'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+function copyAllOCR() {
+  const d = _ocrData;
+  if (!d) return;
+  const text = [
+    'Fournisseur : '    + (d.supplier    || '—'),
+    'N° Facture  : '    + (d.invoice_no  || '—'),
+    'Date        : '    + (d.date        || '—'),
+    'Montant HT  : '    + fmt(d.montant_ht)  + ' €',
+    'TVA (20%)   : '    + fmt(d.tva)         + ' €',
+    'Montant TTC : '    + fmt(d.montant_ttc) + ' €',
+    'Compte      : '    + (d.account || '601100') + ' — ' + (d.account_label || ''),
+  ].join('\n');
+  const btn = document.querySelector('.ocr-action-btn.primary');
+  navigator.clipboard.writeText(text).then(() => {
+    if (btn) { btn.textContent = '✓ Copié !'; setTimeout(() => btn.textContent = '📋 Tout copier', 1800); }
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (btn) { btn.textContent = '✓ Copié !'; setTimeout(() => btn.textContent = '📋 Tout copier', 1800); }
+  });
+}
+function downloadOCR(format) {
+  const d = _ocrData;
+  if (!d) return;
+  let content, mime, ext;
+  const filename = 'ocr_' + (d.invoice_no || 'facture').replace(/[^a-z0-9]/gi, '_');
+  if (format === 'txt') {
+    content = [
+      '=== RÉSULTAT OCR — ComptaEasy ===',
+      'Fournisseur : ' + (d.supplier    || '—'),
+      'N° Facture  : ' + (d.invoice_no  || '—'),
+      'Date        : ' + (d.date        || '—'),
+      'Montant HT  : ' + fmt(d.montant_ht)  + ' €',
+      'TVA (20%)   : ' + fmt(d.tva)         + ' €',
+      'Montant TTC : ' + fmt(d.montant_ttc) + ' €',
+      'Compte      : ' + (d.account || '601100') + ' — ' + (d.account_label || ''),
+      '',
+      'Extrait par ComptaEasy — ' + new Date().toLocaleDateString('fr-FR'),
+    ].join('\n');
+    mime = 'text/plain';
+    ext  = 'txt';
+  } else if (format === 'csv') {
+    const rows = [
+      ['Champ', 'Valeur'],
+      ['Fournisseur',  d.supplier    || ''],
+      ['N° Facture',   d.invoice_no  || ''],
+      ['Date',         d.date        || ''],
+      ['Montant HT',   d.montant_ht  || ''],
+      ['TVA',          d.tva         || ''],
+      ['Montant TTC',  d.montant_ttc || ''],
+      ['Compte',       (d.account || '601100') + ' - ' + (d.account_label || '')],
+    ];
+    content = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(';')).join('\n');
+    mime = 'text/csv';
+    ext  = 'csv';
+  } else if (format === 'json') {
+    content = JSON.stringify({ meta: { source: 'ComptaEasy OCR', date: new Date().toISOString() }, data: d }, null, 2);
+    mime = 'application/json';
+    ext  = 'json';
+  }
+  const blob = new Blob(['\ufeff' + content], { type: mime + ';charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = filename + '.' + ext;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ====== ÉTATS FINANCIERS MODAL ======
