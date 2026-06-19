@@ -1599,16 +1599,27 @@ async function handleOCRFile(files) {
   if (resultEl) { resultEl.style.textAlign = 'center'; resultEl.innerHTML = '<span style="color:var(--text-muted);font-size:12px">Cliquez sur <strong style="color:var(--accent)">Analyser la facture</strong> pour lancer l\'OCR</span>'; }
 }
 
-// ====== VISION OCR VIA ANTHROPIC DIRECT ======
+// ====== VISION OCR VIA PROXY (évite CORS) ======
 async function callVisionDirect(base64Content, mediaType) {
   mediaType = mediaType || 'image/jpeg';
-  const isDoc = mediaType === 'application/pdf';
   const apiKey = localStorage.getItem('ce_claude_key');
   _ocrLog('callVisionDirect: clé=' + (apiKey ? apiKey.slice(0,8) + '…' : 'manquante') + ' type=' + mediaType);
   if (!apiKey) throw new Error('Clé API Anthropic manquante — ajoutez-la via 🔑');
 
-  const VISION_PROMPT = 'Tu es un OCR comptable. Extrais les données de cette facture et réponds UNIQUEMENT en JSON valide, sans backticks ni explication, avec exactement ces clés:\n{\n  "supplier": "nom du fournisseur ou émetteur",\n  "invoice_no": "numéro de facture",\n  "date": "JJ/MM/AAAA",\n  "montant_ht": 0.00,\n  "tva": 0.00,\n  "montant_ttc": 0.00,\n  "account": "601100",\n  "account_label": "Achats matières"\n}\nSi une valeur est absente, utilise null pour les nombres et "—" pour les textes.\nPour le compte comptable, déduis-le du type de prestation (loyer→613200, honoraires→622700, télécom→626000, publicité→623000, fournitures→601100, transport→624100).';
+  try {
+    const resp = await fetch('/api/ocr/vision', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ base64: base64Content, mediaType, apiKey }),
+    });
+    if (resp.ok) return await resp.json();
+    _ocrLog('proxy vision: HTTP ' + resp.status);
+  } catch (e) {
+    _ocrLog('proxy vision échoué: ' + e.message + ' — tentative directe…');
+  }
 
+  const isDoc = mediaType === 'application/pdf';
+  const VISION_PROMPT = 'Tu es un OCR comptable. Extrais les données de cette facture et réponds UNIQUEMENT en JSON valide, sans backticks ni explication, avec exactement ces clés:\n{\n  "supplier": "nom du fournisseur ou émetteur",\n  "invoice_no": "numéro de facture",\n  "date": "JJ/MM/AAAA",\n  "montant_ht": 0.00,\n  "tva": 0.00,\n  "montant_ttc": 0.00,\n  "account": "601100",\n  "account_label": "Achats matières"\n}\nSi une valeur est absente, utilise null pour les nombres et "—" pour les textes.\nPour le compte comptable, déduis-le du type de prestation (loyer→613200, honoraires→622700, télécom→626000, publicité→623000, fournitures→601100, transport→624100).';
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), 45000);
   try {
@@ -1737,7 +1748,7 @@ async function runOCR() {
   setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px"><div style="font-size:24px;margin-bottom:8px">⟳</div>Préparation…</div>');
 
   const apiKey = localStorage.getItem('ce_claude_key');
-  const useAI = apiKey && confirm('Utiliser l\'IA Claude (plus précis) ? Cliquez sur Annuler pour utiliser Tesseract (gratuit).');
+  const useAI = !!apiKey;
 
   try {
     let data;
@@ -1772,8 +1783,13 @@ async function runOCR() {
         setOCRStatus(status, '⟳ Vision IA…');
         setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Analyse IA…</div>');
         const rawBase64 = await base64FromFile(file);
-        data = await callVisionDirect(rawBase64, 'application/pdf');
-      } else {
+        try {
+          data = await callVisionDirect(rawBase64, 'application/pdf');
+        } catch (visionErr) {
+          _ocrLog('Vision IA échoué: ' + visionErr.message + ' → fallback Tesseract');
+        }
+      }
+      if (!data || !data.montant_ttc) {
         // Tesseract: render PDF page to canvas, then OCR
         setOCRStatus(status, '⟳ Rendu PDF…');
         setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:20px;margin-bottom:6px">📄</div>Analyse visuelle…</div>');
@@ -1797,8 +1813,13 @@ async function runOCR() {
       if (useAI) {
         setOCRStatus(status, '⟳ Vision IA…');
         setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:24px;margin-bottom:8px">⟳</div>Analyse IA…</div>');
-        data = await runVisionOCR(file);
-      } else {
+        try {
+          data = await runVisionOCR(file);
+        } catch (visionErr) {
+          _ocrLog('Vision IA échoué: ' + visionErr.message + ' → fallback Tesseract');
+        }
+      }
+      if (!data || !data.montant_ttc) {
         setOCRStatus(status, '⟳ OCR Tesseract…');
         setOCRResult(result, '<div style="color:var(--text-muted);font-size:12px;text-align:center"><div style="font-size:24px;margin-bottom:8px">⟳</div>Analyse…</div>');
         const ocrText = await tesseractOCR(file);
