@@ -2,12 +2,14 @@
   "version": 2,
   "builds": [
     { "src": "api/index.js", "use": "@vercel/node", "config": { "includeFiles": ["api/*.wasm", "db/*.wasm"] } },
+    { "src": "api/ocr-vision.js", "use": "@vercel/node" },
     { "src": "*.html", "use": "@vercel/static" },
     { "src": "robots.txt", "use": "@vercel/static" },
     { "src": "sitemap.xml", "use": "@vercel/static" },
     { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/api/ocr/vision", "dest": "/api/ocr-vision.js" },
     { "src": "/api/(.*)", "dest": "/api/index.js" },
     { "src": "/(.*)", "dest": "/$1" }
   ]

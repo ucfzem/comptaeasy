@@ -1606,18 +1606,22 @@ async function callVisionDirect(base64Content, mediaType) {
   _ocrLog('callVisionDirect: clé=' + (apiKey ? apiKey.slice(0,8) + '…' : 'manquante') + ' type=' + mediaType);
   if (!apiKey) throw new Error('Clé API Anthropic manquante — ajoutez-la via 🔑');
 
-  // Essai via le proxy serveur (évite CORS)
+  // Essai via le proxy serveur (évite CORS) — timeout 10s
+  const proxyCtrl = new AbortController();
+  const proxyTimer = setTimeout(() => proxyCtrl.abort(), 10000);
   try {
     const resp = await fetch('/api/ocr/vision', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ base64: base64Content, mediaType, apiKey }),
+      signal: proxyCtrl.signal,
     });
+    clearTimeout(proxyTimer);
     if (resp.ok) return await resp.json();
     _ocrLog('proxy vision: HTTP ' + resp.status);
   } catch (e) {
-    _ocrLog('proxy vision échoué: ' + e.message + ' — tentative directe…');
-  }
+    _ocrLog('proxy vision échoué: ' + e.message + ' → fallback Tesseract');
+  } finally { clearTimeout(proxyTimer); }
 
   // Fallback: appel direct (CORS peut fonctionner avec certaines extensions)
   const isDoc = mediaType === 'application/pdf';

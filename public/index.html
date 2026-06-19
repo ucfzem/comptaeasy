@@ -1606,17 +1606,21 @@ async function callVisionDirect(base64Content, mediaType) {
   _ocrLog('callVisionDirect: clé=' + (apiKey ? apiKey.slice(0,8) + '…' : 'manquante') + ' type=' + mediaType);
   if (!apiKey) throw new Error('Clé API Anthropic manquante — ajoutez-la via 🔑');
 
+  const proxyCtrl = new AbortController();
+  const proxyTimer = setTimeout(() => proxyCtrl.abort(), 10000);
   try {
     const resp = await fetch('/api/ocr/vision', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ base64: base64Content, mediaType, apiKey }),
+      signal: proxyCtrl.signal,
     });
+    clearTimeout(proxyTimer);
     if (resp.ok) return await resp.json();
     _ocrLog('proxy vision: HTTP ' + resp.status);
   } catch (e) {
-    _ocrLog('proxy vision échoué: ' + e.message + ' — tentative directe…');
-  }
+    _ocrLog('proxy vision échoué: ' + e.message + ' → fallback Tesseract');
+  } finally { clearTimeout(proxyTimer); }
 
   const isDoc = mediaType === 'application/pdf';
   const VISION_PROMPT = 'Tu es un OCR comptable. Extrais les données de cette facture et réponds UNIQUEMENT en JSON valide, sans backticks ni explication, avec exactement ces clés:\n{\n  "supplier": "nom du fournisseur ou émetteur",\n  "invoice_no": "numéro de facture",\n  "date": "JJ/MM/AAAA",\n  "montant_ht": 0.00,\n  "tva": 0.00,\n  "montant_ttc": 0.00,\n  "account": "601100",\n  "account_label": "Achats matières"\n}\nSi une valeur est absente, utilise null pour les nombres et "—" pour les textes.\nPour le compte comptable, déduis-le du type de prestation (loyer→613200, honoraires→622700, télécom→626000, publicité→623000, fournitures→601100, transport→624100).';
