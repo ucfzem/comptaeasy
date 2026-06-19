@@ -1753,6 +1753,7 @@ async function runOCR() {
 
       if (extractedText) {
         data = parseOCRText(extractedText);
+        data._raw = extractedText;
         if (data.montant_ttc) { renderOCRResult(data, status, result); return; }
         setOCRStatus(status, '⚠ Texte non parsé');
         if (result) {
@@ -1790,6 +1791,7 @@ async function runOCR() {
         if (!ocrText) throw new Error('Aucun texte reconnu par Tesseract');
         _ocrLog('texte OCR: ' + ocrText.slice(0, 100) + '…');
         data = parseOCRText(ocrText);
+        data._raw = ocrText;
       }
     } else if (cat === 'image') {
       if (useAI) {
@@ -1802,6 +1804,7 @@ async function runOCR() {
         const ocrText = await tesseractOCR(file);
         if (!ocrText) throw new Error('Aucun texte reconnu');
         data = parseOCRText(ocrText);
+        data._raw = ocrText;
       }
     } else { throw new Error('Format non supporté'); }
     if (data && data.montant_ttc) {
@@ -1941,7 +1944,8 @@ function fallbackCopy(text, cb) {
 }
 function copyAllOCR() {
   const d = _ocrData; if(!d)return;
-  const text = '=== FACTURE OCR — ComptaEasy ===\nFournisseur : '+(d.supplier||'—')+'\nN° Facture  : '+(d.invoice_no||'—')+'\nDate        : '+(d.date||'—')+'\nMontant HT  : '+fmt(d.montant_ht)+' €\nTVA (20%)   : '+fmt(d.tva)+' €\nMontant TTC : '+fmt(d.montant_ttc)+' €\nCompte      : '+(d.account||'601100')+' — '+(d.account_label||'');
+  const raw = d._raw ? '\n\n--- TEXTE OCR BRUT ---\n' + d._raw : '';
+  const text = '=== FACTURE OCR — ComptaEasy ===\nFournisseur : '+(d.supplier||'—')+'\nN° Facture  : '+(d.invoice_no||'—')+'\nDate        : '+(d.date||'—')+'\nMontant HT  : '+fmt(d.montant_ht)+' €\nTVA (20%)   : '+fmt(d.tva)+' €\nMontant TTC : '+fmt(d.montant_ttc)+' €\nCompte      : '+(d.account||'601100')+' — '+(d.account_label||'')+raw;
   const btn = document.querySelector('.ocr-action-btn.primary');
   const doIt = ()=>{if(btn){btn.textContent='✓ Copié !';setTimeout(()=>btn.textContent='📋 Tout copier',1800);}};
   if(navigator.clipboard)navigator.clipboard.writeText(text).then(doIt).catch(()=>fallbackCopy(text,doIt));
@@ -1950,10 +1954,11 @@ function copyAllOCR() {
 function downloadOCR(format) {
   const d = _ocrData; if(!d)return;
   const slug = (d.invoice_no||'facture').replace(/[^a-z0-9]/gi,'_');
+  const raw = d._raw || '';
   let content, mime, ext;
-  if(format==='txt'){content='=== RÉSULTAT OCR — ComptaEasy ===\nFournisseur : '+(d.supplier||'—')+'\nN° Facture  : '+(d.invoice_no||'—')+'\nDate        : '+(d.date||'—')+'\nMontant HT  : '+fmt(d.montant_ht)+' €\nTVA (20%)   : '+fmt(d.tva)+' €\nMontant TTC : '+fmt(d.montant_ttc)+' €\nCompte      : '+(d.account||'601100')+' — '+(d.account_label||'')+'\n\nExtrait par ComptaEasy — '+new Date().toLocaleDateString('fr-FR');mime='text/plain';ext='txt';}
-  else if(format==='csv'){const rows=[['Champ','Valeur'],['Fournisseur',d.supplier||''],['N° Facture',d.invoice_no||''],['Date',d.date||''],['Montant HT',d.montant_ht??''],['TVA',d.tva??''],['Montant TTC',d.montant_ttc??''],['Compte',(d.account||'601100')+' - '+(d.account_label||'')]];content=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');mime='text/csv';ext='csv';}
-  else{content=JSON.stringify({meta:{source:'ComptaEasy OCR',date:new Date().toISOString()},data:d},null,2);mime='application/json';ext='json';}
+  if(format==='txt'){content='=== RÉSULTAT OCR — ComptaEasy ===\nFournisseur : '+(d.supplier||'—')+'\nN° Facture  : '+(d.invoice_no||'—')+'\nDate        : '+(d.date||'—')+'\nMontant HT  : '+fmt(d.montant_ht)+' €\nTVA (20%)   : '+fmt(d.tva)+' €\nMontant TTC : '+fmt(d.montant_ttc)+' €\nCompte      : '+(d.account||'601100')+' — '+(d.account_label||'')+'\n\n--- TEXTE OCR BRUT ---\n'+raw+'\n\nExtrait par ComptaEasy — '+new Date().toLocaleDateString('fr-FR');mime='text/plain';ext='txt';}
+  else if(format==='csv'){const rows=[['Champ','Valeur'],['Fournisseur',d.supplier||''],['N° Facture',d.invoice_no||''],['Date',d.date||''],['Montant HT',d.montant_ht??''],['TVA',d.tva??''],['Montant TTC',d.montant_ttc??''],['Compte',(d.account||'601100')+' - '+(d.account_label||'')]];if(raw)rows.push(['Texte OCR Brut',raw]);content=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');mime='text/csv';ext='csv';}
+  else{const jd=Object.assign({},d);delete jd._raw;content=JSON.stringify({meta:{source:'ComptaEasy OCR',date:new Date().toISOString()},data:jd,raw_ocr_text:raw},null,2);mime='application/json';ext='json';}
   const blob=new Blob(['\ufeff'+content],{type:mime+';charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=Object.assign(document.createElement('a'),{href:url,download:'ocr_'+slug+'.'+ext});
